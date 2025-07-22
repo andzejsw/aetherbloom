@@ -68,13 +68,11 @@ struct Chunk {
     // number of blocks
     size_t count;
 
-    struct {
-        // if true, this chunk contains no blocks
-        bool empty: 1;
+    // if true, this chunk contains no blocks
+    bool empty;
 
-        // if true, this chunk is generating
-        bool generating: 1;
-    } flags;
+    // if true, this chunk is generating
+    bool generating;
     
     struct ChunkMesh *mesh;
 };
@@ -87,6 +85,7 @@ void chunk_prepare(struct Chunk *self);
 void chunk_render(struct Chunk *self, enum ChunkMeshPart part);
 void chunk_update(struct Chunk *self);
 void chunk_tick(struct Chunk *self);
+void chunk_after_generate(struct Chunk *self);
 
 void chunk_after_generate(struct Chunk *self);
 void chunk_on_modify(

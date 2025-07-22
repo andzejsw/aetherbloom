@@ -304,7 +304,7 @@ void chunkmesh_prepare_render(struct ChunkMesh *self) {
 
 void chunkmesh_render(struct ChunkMesh *self, enum ChunkMeshPart part) {
     // don't attempt to render empty meshes
-    if ((part == TRANSPARENT && self->indices.transparent.count == 0) ||
+    if ((part == CHUNK_MESH_TRANSPARENT && self->indices.transparent.count == 0) ||
         (part == BASE && self->indices.base.count == 0)) {
         return;
     }
@@ -322,7 +322,7 @@ void chunkmesh_render(struct ChunkMesh *self, enum ChunkMeshPart part) {
     vbo_bind(self->ibo);
 
     size_t offset, count;
-    if (part == TRANSPARENT) {
+    if (part == CHUNK_MESH_TRANSPARENT) {
         offset = self->indices.transparent.offset;
         count = self->indices.transparent.count;
     } else {

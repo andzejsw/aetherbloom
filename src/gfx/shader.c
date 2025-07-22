@@ -22,8 +22,7 @@ static GLint _compile(char *path, GLenum type) {
 
     f = fopen(path, "rb");
     if (f == NULL) {
-        fprintf(stderr, "error loading shader at %s\n", path);
-        exit(1);
+        _log_and_fail(0, "loading", path, NULL, NULL);
     }
 
     fseek(f, 0, SEEK_END);

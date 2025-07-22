@@ -1,16 +1,16 @@
-CC      = gcc
+CC      = $(CC)
 CFLAGS  = -std=c11 -O3
 LDFLAGS =
 
 .PHONY: all clean
 
-all: lib
+all: clean lib
 
 %.o: %.c
-	$(CC) -o $@ $^ -c $(CCFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ -c $(CFLAGS) $(LDFLAGS)
 
 lib: noise1234.o
-	ar rcs libnoise.a $^
+	ar rcs libnoise.a noise1234.o
 
 clean:
 	rm -rf libnoise.a

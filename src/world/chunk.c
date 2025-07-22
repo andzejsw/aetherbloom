@@ -77,7 +77,7 @@ void chunk_on_modify(
             torchlight_add(self->world, pos_w, block.get_torchlight(self->world, pos_w));
         }
 
-        if (!self->flags.generating) {
+        if (!self->generating) {
             if (block.transparent) {
                 world_heightmap_recalculate(self->world, (ivec2s) {{ pos_w.x, pos_w.z }});
                 
@@ -94,7 +94,7 @@ void chunk_on_modify(
         self->count += (data_block == AIR ? -1 : 1);
     }
 
-    self->flags.empty = self->count == 0;
+    self->empty = self->count == 0;
 
     // mark any chunks that could have been affected as dirty
     if ((data_block != prev_block || light != prev_light)
@@ -111,7 +111,7 @@ void chunk_on_modify(
 }
 
 void chunk_prepare(struct Chunk *self) {
-    if (self->flags.empty) {
+    if (self->empty) {
         return;
     }
 
@@ -119,7 +119,7 @@ void chunk_prepare(struct Chunk *self) {
 }
 
 void chunk_render(struct Chunk *self, enum ChunkMeshPart part) {
-    if (self->flags.empty) {
+    if (self->empty) {
         return;
     }
 

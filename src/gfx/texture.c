@@ -21,7 +21,8 @@ void texture_load_pixels(char *path, u8 **pixels_out, size_t *width_out, size_t 
 
 struct Texture texture_create_from_pixels(u8 *pixels, size_t width, size_t height) {
     struct Texture self = {
-        .size = (ivec2s) {{ width, height }}
+        .size = (ivec2s) {{ width, height }},
+        .uv_unit = GLMS_VEC2_ZERO
     };
 
     glGenTextures(1, &self.handle);

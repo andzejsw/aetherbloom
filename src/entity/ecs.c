@@ -5,10 +5,7 @@
 #define ECS_TAG(_p) *((ECSTag *) (((void *) (_p)) - ECS_TAG_SIZE))
 #define ECS_PTAG(_p) ((ECSTag *) (((void *) (_p)) - ECS_TAG_SIZE))
 #define ECSCL_ELEMENT_SIZE(_plist) ((_plist)->component_size + ECS_TAG_SIZE)
-#define ECSCL_GET(_plist, _i) ({\
-        struct ComponentList *_pl = (_plist);\
-        ((_pl)->components) + ((_i) * ECSCL_ELEMENT_SIZE(_pl)) + ECS_TAG_SIZE;\
-    })
+#define ECSCL_GET(_plist, _i) (((_plist)->components) + ((_i) * ECSCL_ELEMENT_SIZE(_plist)) + ECS_TAG_SIZE)
 
 void _ecs_register_internal(
     enum ECSComponent id, size_t component_size,

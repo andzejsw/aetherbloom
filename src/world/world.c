@@ -109,10 +109,12 @@ static inline ivec2s world_heightmap_offset(struct World *self, size_t i) {
 
 // returns the heightmap for the specified chunk
 struct Heightmap *chunk_get_heightmap(struct Chunk *self) {
-    return self->world->heightmaps[
+    assert(self != NULL); // Added assert
+    struct Heightmap *result = self->world->heightmaps[
         world_heightmap_index(
             self->world,
             (ivec2s) {{ self->offset.x, self->offset.z }})];
+    return result;
 }
 
 // returns heightmap value at specified x, z coordinate
@@ -207,7 +209,7 @@ void world_load_chunk(struct World *self, ivec3s offset) {
     assert(!world_contains_chunk(self, offset));
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
     chunk_init(chunk, self, offset);
-    chunk->flags.generating = true;
+    chunk->generating = true;
     worldgen_generate(chunk);
 
     // set blocks which were previously unloaded
@@ -219,7 +221,7 @@ void world_load_chunk(struct World *self, ivec3s offset) {
         }
     }
 
-    chunk->flags.generating = false;
+    chunk->generating = false;
 
     self->chunks[world_chunk_index(self, chunk->offset)] = chunk;
     chunk_after_generate(chunk);
@@ -415,7 +417,7 @@ void world_render(struct World *self) {
     glDisable(GL_CULL_FACE);
     world_foreach_btf(self, c2) {
         if (c2 != NULL) {
-            chunk_render(c2, TRANSPARENT);
+            chunk_render(c2, CHUNK_MESH_TRANSPARENT);
         }
     }
     glEnable(GL_CULL_FACE);
@@ -471,7 +473,7 @@ size_t world_get_aabbs(struct World *self, AABB area, AABB *aabbs, size_t n) {
 
                     if (i == n) {
                         // TODO: real warning here?
-                        printf("%s", "WARNING: AABB buffer filled\n");
+                        printf("%s", "WARNING: AABB buffer filled\n");  
                         break;
                     }
                 }

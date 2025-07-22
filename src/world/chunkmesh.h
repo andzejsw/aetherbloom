@@ -11,7 +11,7 @@ struct Chunk;
 
 enum ChunkMeshPart {
     BASE,
-    TRANSPARENT
+    CHUNK_MESH_TRANSPARENT
 };
 
 #define BUFFER_TYPE_LAST FACES

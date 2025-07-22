@@ -4,7 +4,7 @@
 
 const f32 MOVEMENT_EPSILON = 0.01f;
 
-const vec3s GRAVITY = (vec3s) {{ 0, -0.0086f, 0 }};
+static const vec3s GRAVITY = {{ 0, -0.0086f, 0 }};
 
 static f32 move_axis(AABB aabb, f32 movement, vec3s axis, AABB *colliders, size_t size) {
     vec3s d_v = glms_vec3_scale(axis, movement);

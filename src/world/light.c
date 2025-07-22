@@ -93,25 +93,28 @@ static void remove_propagate(
 static void add_channel(
     struct World *world, ivec3s pos,
     u8 value, u32 mask, u32 offset, enum PropagationType type) {
-    struct LightQueue queue = { .size = 0 };
+    struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
     world_set_light(world, pos, (world_get_light(world, pos) & ~mask) | (((u32) value) << offset));
-    ENQUEUE(&queue, ((struct LightNode) { .pos = pos }));
-    add_propagate(world, &queue, mask, offset, type);
+    ENQUEUE(queue, ((struct LightNode) { .pos = pos }));
+    add_propagate(world, queue, mask, offset, type);
+    free(queue);
 }
 
 static void remove_channel(
     struct World *world, ivec3s pos,
     u32 mask, u32 offset, enum PropagationType type) {
-    struct LightQueue
-        queue = { .size = 0 },
-        prop_queue = { .size = 0 };
+    struct LightQueue *queue = calloc(1, sizeof(struct LightQueue)),
+        *prop_queue = calloc(1, sizeof(struct LightQueue));
 
     u32 light = world_get_light(world, pos); 
     world_set_light(world, pos, light & ~mask);
 
-    ENQUEUE(&queue, ((struct LightNode) { .pos = pos, .value = (light & mask) >> offset }));
-    remove_propagate(world, &queue, &prop_queue, mask, offset, type);
-    add_propagate(world, &prop_queue, mask, offset, type);
+    ENQUEUE(queue, ((struct LightNode) { .pos = pos, .value = (light & mask) >> offset }));
+    remove_propagate(world, queue, prop_queue, mask, offset, type);
+    add_propagate(world, prop_queue, mask, offset, type);
+
+    free(queue);
+    free(prop_queue);
 }
 
 void torchlight_add(struct World *world, ivec3s pos, Torchlight light) {
@@ -133,13 +136,13 @@ void torchlight_remove(struct World *world, ivec3s pos) {
 
 // updates lighting at the specified position, propagating light around it
 void light_update(struct World *world, ivec3s pos) {
-    struct LightQueue queue = { .size = 0 }; 
+    struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
 
     // i is [0..4] instead of [0..3] so sunlight is propagated as well
     for (size_t i = 0; i < 5; i++) {
         u32 mask = 0xF << (i * 4), offset = i * 4;
         bool sunlight = i == 4;
-        queue.size = 0;
+        queue->size = 0;
 
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s pos_n = glms_ivec3_add(pos, DIR2IVEC3S(d));
@@ -148,18 +151,20 @@ void light_update(struct World *world, ivec3s pos) {
                 continue;
             }
 
-            ENQUEUE(&queue, ((struct LightNode) { .pos = pos_n }));
+            ENQUEUE(queue, ((struct LightNode) { .pos = pos_n }));
         }
 
         // enqueue for sunlight if this block is above the heightmap
         if (sunlight &&
             pos.y > world_heightmap_get(world, (ivec2s) {{ pos.x, pos.z }})) {
             world_set_sunlight(world, pos, LIGHT_MAX);
-            ENQUEUE(&queue, ((struct LightNode) { .pos = pos }));
+            ENQUEUE(queue, ((struct LightNode) { .pos = pos }));
         }
 
-        add_propagate(world, &queue, mask, offset, sunlight ? SUNLIGHT : DEFAULT_LIGHT);
+        add_propagate(world, queue, mask, offset, sunlight ? SUNLIGHT : DEFAULT_LIGHT);
     }
+
+    free(queue);
 }
 
 void light_remove(struct World *world, ivec3s pos) {
@@ -169,8 +174,9 @@ void light_remove(struct World *world, ivec3s pos) {
 
 void light_apply(struct Chunk *chunk) {
     struct Heightmap *heightmap = chunk_get_heightmap(chunk);
-    struct LightQueue sunlight_queue = { .size = 0 },
-        torchlight_queue = { .size = 0 };
+    struct LightQueue *sunlight_queue = calloc(1, sizeof(struct LightQueue)),
+        *torchlight_queue = calloc(1, sizeof(struct LightQueue));
+
 
     // propagate sunlight for this chunk
     for (s64 x = 0; x < CHUNK_SIZE.x; x++) {
@@ -195,7 +201,7 @@ void light_apply(struct Chunk *chunk) {
                         if (pos_w.y < (chunk_in_bounds(pos_cn) ?
                                 HEIGHTMAP_GET(heightmap, ((ivec2s) {{ pos_cn.x, pos_cn.z }})) :
                                 world_heightmap_get(chunk->world, ((ivec2s) {{ pos_wn.x, pos_wn.z }})))) {
-                            ENQUEUE(&sunlight_queue, ((struct LightNode) { .pos = pos_w }));
+                            ENQUEUE(sunlight_queue, ((struct LightNode) { .pos = pos_w }));
                         }
                     }
                 }
@@ -205,13 +211,13 @@ void light_apply(struct Chunk *chunk) {
                 if (block.can_emit_light) {
                     Torchlight value = block.get_torchlight(chunk->world, pos_w);
                     chunk_set_torchlight(chunk, pos_c, value);
-                    ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos_w, .value = value }));
+                    ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos_w, .value = value }));
                 }
             }
         }
     }
 
-    add_propagate(chunk->world, &sunlight_queue, 0xF0000, 16, SUNLIGHT);
+    add_propagate(chunk->world, sunlight_queue, 0xF0000, 16, SUNLIGHT);
 
     // fill queue_border with all positions of all non-empty light values on
     // the immediate eborder of this chunk
@@ -224,14 +230,14 @@ void light_apply(struct Chunk *chunk) {
             light = world_get_light(chunk->world, pos);
 
             if (light != 0) {
-                ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
+                ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
             }
 
             pos = glms_ivec3_add(chunk->position, (ivec3s) {{ x, CHUNK_SIZE.y, z }});
             light = world_get_light(chunk->world, pos);
 
              if (light != 0) {
-                ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
+                ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
             }
         }
     }
@@ -242,14 +248,14 @@ void light_apply(struct Chunk *chunk) {
             light = world_get_light(chunk->world, pos);
 
             if (light != 0) {
-                ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
+                ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
             }
 
             pos = glms_ivec3_add(chunk->position, (ivec3s) {{ x, y, CHUNK_SIZE.z }});
             light = world_get_light(chunk->world, pos);
 
             if (light != 0) {
-                ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
+                ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
             }
         }
     }
@@ -260,32 +266,36 @@ void light_apply(struct Chunk *chunk) {
             light = world_get_light(chunk->world, pos);
 
             if (light != 0) {
-                ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
+                ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
             }
 
             pos = glms_ivec3_add(chunk->position, (ivec3s) {{ CHUNK_SIZE.x, y, z }});
             light = world_get_light(chunk->world, pos);
 
             if (light != 0) {
-                ENQUEUE(&torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
+                ENQUEUE(torchlight_queue, ((struct LightNode) { .pos = pos, .value = light }));
             }
         }
     }
 
     // propagate each channel if the channel's value in the border position is
     // nonzero
-    struct LightQueue queue = { .size = 0 };
+    struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
     for (size_t i = 0; i < 4; i++) {
         u32 mask = 0xF << (i * 4), offset = i * 4;
-        queue.size = 0;
+        queue->size = 0;
 
-        for (size_t j = 0; j < torchlight_queue.size; j++) {
-            struct LightNode n = torchlight_queue.elements[i];
+        for (size_t j = 0; j < torchlight_queue->size; j++) {
+            struct LightNode n = torchlight_queue->elements[i];
             if ((n.value & mask) != 0) {
-                ENQUEUE(&queue, ((struct LightNode) { .pos = n.pos }));
+                ENQUEUE(queue, ((struct LightNode) { .pos = n.pos }));
             }
         }
 
-        add_propagate(chunk->world, &queue, mask, offset, DEFAULT_LIGHT);
+        add_propagate(chunk->world, queue, mask, offset, DEFAULT_LIGHT);
     }
+
+    free(sunlight_queue);
+    free(torchlight_queue);
+    free(queue);
 }

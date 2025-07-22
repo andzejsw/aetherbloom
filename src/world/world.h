@@ -40,7 +40,7 @@ struct Heightmap {
 };
 
 // computes the index of position (x, z) in a heightmap
-#define HEIGHTMAP_INDEX(p) ({ ivec2s q = (p); (q.x * CHUNK_SIZE.x) + q.y; })
+#define HEIGHTMAP_INDEX(p) ((p).x * CHUNK_SIZE.x) + (p).y
 
 // gets heightmap data from heightmap h at the specified (x, z) position
 #define HEIGHTMAP_GET(h, p) ((h)->data[HEIGHTMAP_INDEX(p)])
