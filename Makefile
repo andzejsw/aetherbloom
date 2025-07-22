@@ -23,6 +23,8 @@ ifeq ($(TARGET_OS), Windows)
 	LDFLAGS += -lmingw32 -mconsole -lopengl32 -lgdi32 -luser32 -lkernel32 -lwinmm -lshell32 -lws2_32 lib/noise/libnoise.a -lm
 endif
 
+RES_FILE = game.res
+
 SRC = $(wildcard src/*.c) $(wildcard src/block/*.c) $(wildcard src/entity/*.c) $(wildcard src/gfx/*.c) $(wildcard src/ui/*.c) $(wildcard src/util/*.c) $(wildcard src/world/*.c) $(wildcard src/world/gen/*.c) lib/noise/noise1234.c
 OBJ  = $(SRC:.c=.o)
 BIN = bin
@@ -51,7 +53,8 @@ run: all
 
 game: $(OBJ)
 ifeq ($(TARGET_OS), Windows)
-	$(CC) -o $(BIN)/game.exe $^ $(LDFLAGS)
+	x86_64-w64-mingw32-windres game.rc -O coff -o $(RES_FILE)
+	$(CC) -o $(BIN)/game.exe $^ $(RES_FILE) $(LDFLAGS)
 else
 	$(CC) -o $(BIN)/game $^ $(LDFLAGS)
 endif
@@ -63,4 +66,4 @@ lib/noise/noise1234.o: lib/noise/noise1234.c
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm -rf $(BIN) $(OBJ)
+	rm -rf $(BIN) $(OBJ) $(RES_FILE)

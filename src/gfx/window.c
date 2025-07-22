@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stb_image.h>
 
 // global window
 struct Window window;
@@ -90,6 +91,12 @@ void window_create(FWindow init, FWindow destroy, FWindow tick,  FWindow update,
         glfwTerminate();
         exit(1);
     }
+
+    // set window icon
+    GLFWimage images[1];
+    images[0].pixels = stbi_load("res/images/game.png", &images[0].width, &images[0].height, 0, 4);
+    glfwSetWindowIcon(window.handle, 1, images);
+    stbi_image_free(images[0].pixels);
 
     glfwMakeContextCurrent(window.handle);
 
