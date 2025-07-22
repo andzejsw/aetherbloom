@@ -9,12 +9,12 @@
 // forward declarations
 struct World;
 
-#define CHUNK_SIZE_X 32
-#define CHUNK_SIZE_Y 32
-#define CHUNK_SIZE_Z 32
+#define CHUNK_SIZE_X 16
+#define CHUNK_SIZE_Y 16
+#define CHUNK_SIZE_Z 16
 
 // max(CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z)
-#define CHUNK_SIZE_MAX 32
+#define CHUNK_SIZE_MAX 16
 
 #define CHUNK_SIZE_XZ ((ivec2s) {{ CHUNK_SIZE_X, CHUNK_SIZE_Z }})
 
