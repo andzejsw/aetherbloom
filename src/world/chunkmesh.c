@@ -1,5 +1,7 @@
 #include "../state.h"
 #include "chunk.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 // Buffer sizes (in bytes) corresponding to BufferType
 static const size_t BUFFER_SIZES[3] = {
@@ -54,8 +56,14 @@ void chunkmesh_destroy(struct ChunkMesh *self) {
 }
 
 static void buffer_prepare(struct ChunkMeshBuffer *self) {
-    if (self->data == NULL) {
-        self->data = malloc(self->capacity);
+    if (self->data == NULL || self->capacity < BUFFER_SIZES[self->type]) {
+        self->capacity = BUFFER_SIZES[self->type];
+        self->data = realloc(self->data, self->capacity);
+        if (self->data == NULL) {
+            // Handle realloc failure, e.g., print an error and exit
+            fprintf(stderr, "Failed to reallocate chunk mesh buffer!\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     self->count = 0;
@@ -86,8 +94,10 @@ static void chunkmesh_finalize_data(struct ChunkMesh *self) {
         self->vbo, self->buffers[DATA].data, 0,
         self->buffers[DATA].count);
 
-    free(self->buffers[DATA].data);
-    self->buffers[DATA].data = NULL;
+    if (!self->flags.persist) {
+        free(self->buffers[DATA].data);
+        self->buffers[DATA].data = NULL;
+    }
 }
 
 // MUST be called immediately after meshing AND sorting (before rendering)
@@ -98,11 +108,14 @@ static void chunkmesh_finalize_indices(struct ChunkMesh *self) {
         self->buffers[INDICES].count);
 
     if (!self->flags.persist) {
-        free(self->buffers[INDICES].data);
-        self->buffers[INDICES].data = NULL;
-
-        free(self->buffers[FACES].data);
-        self->buffers[FACES].data = NULL;
+        if (self->buffers[INDICES].data != NULL) {
+            free(self->buffers[INDICES].data);
+            self->buffers[INDICES].data = NULL;
+        }
+        if (self->buffers[FACES].data != NULL) {
+            free(self->buffers[FACES].data);
+            self->buffers[FACES].data = NULL;
+        }
     }
 }
 
@@ -341,10 +354,13 @@ void chunkmesh_set_persist(struct ChunkMesh *self, bool persist) {
     self->flags.persist = persist;
 
     if (!self->flags.persist) {
-        free(self->buffers[INDICES].data);
-        free(self->buffers[FACES].data);
-        
-        self->buffers[INDICES].data = NULL;
-        self->buffers[FACES].data = NULL;
+        if (self->buffers[INDICES].data != NULL) {
+            free(self->buffers[INDICES].data);
+            self->buffers[INDICES].data = NULL;
+        }
+        if (self->buffers[FACES].data != NULL) {
+            free(self->buffers[FACES].data);
+            self->buffers[FACES].data = NULL;
+        }
     }
 }

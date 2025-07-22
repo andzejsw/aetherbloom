@@ -27,10 +27,10 @@
 #include "ivec3s.h"
 #include "aabb.h"
 
+#include "types.h"
 #include "fmath.h"
 #include "time.h"
 #include "direction.h"
-#include "types.h"
 #include "bitmap.h"
 #include "color.h"
 
