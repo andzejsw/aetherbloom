@@ -84,7 +84,7 @@ void window_create(FWindow init, FWindow destroy, FWindow tick,  FWindow update,
 	
 
     window.size = (ivec2s) {{1280, 720}};
-    window.handle = glfwCreateWindow(window.size.x, window.size.y, "Project", NULL, NULL);
+    window.handle = glfwCreateWindow(window.size.x, window.size.y, "Aetherbloom", NULL, NULL);
     if (window.handle == NULL) {
         fprintf(stderr, "%s",  "error creating window\n");
         glfwTerminate();
