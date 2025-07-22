@@ -10,10 +10,7 @@ static bool _frequency_initialized = false;
 #define NS_PER_SECOND (1000000000ULL)
 #define NS_PER_MS (1000000ULL)
 
-#define NOW() (\
-    _frequency_initialized || (QueryPerformanceFrequency(&_frequency), _frequency_initialized = true), \
-    (u64)((QueryPerformanceCounter((LARGE_INTEGER*)&_frequency.QuadPart), (_frequency.QuadPart * NS_PER_SECOND) / _frequency.QuadPart)) \
-)
+#define NOW() ({ if (!_frequency_initialized) { QueryPerformanceFrequency(&_frequency); _frequency_initialized = true; } LARGE_INTEGER current_time; QueryPerformanceCounter(&current_time); (u64)((double)current_time.QuadPart / _frequency.QuadPart * NS_PER_SECOND); })
 
 #else // Linux/Unix
 #include <time.h>

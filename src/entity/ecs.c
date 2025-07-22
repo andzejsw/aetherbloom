@@ -1,7 +1,6 @@
 #include "ecs.h"
 
-// TODO: real alignment, this is a silly hack
-#define ECS_TAG_SIZE 16
+#define ECS_TAG_SIZE sizeof(ECSTag)
 #define ECS_TAG(_p) *((ECSTag *) (((void *) (_p)) - ECS_TAG_SIZE))
 #define ECS_PTAG(_p) ((ECSTag *) (((void *) (_p)) - ECS_TAG_SIZE))
 #define ECSCL_ELEMENT_SIZE(_plist) ((_plist)->component_size + ECS_TAG_SIZE)

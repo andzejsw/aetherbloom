@@ -21,10 +21,10 @@ static void tick(struct ControlComponent *c_control, struct Entity entity) {
     struct BlockLookComponent *c_blocklook = ecs_get(entity, C_BLOCKLOOK);
     struct PhysicsComponent *c_physics = ecs_get(entity, C_PHYSICS);
     
-    c_movement->directions.forward = state.window->keyboard.keys[GLFW_KEY_W].down;
-    c_movement->directions.backward = state.window->keyboard.keys[GLFW_KEY_S].down;
-    c_movement->directions.left = state.window->keyboard.keys[GLFW_KEY_A].down;
-    c_movement->directions.right = state.window->keyboard.keys[GLFW_KEY_D].down;
+    c_movement->directions.forward = state.window->keyboard.keys[GLFW_KEY_W].down || state.window->keyboard.keys[GLFW_KEY_UP].down;
+    c_movement->directions.backward = state.window->keyboard.keys[GLFW_KEY_S].down || state.window->keyboard.keys[GLFW_KEY_DOWN].down;
+    c_movement->directions.left = state.window->keyboard.keys[GLFW_KEY_A].down || state.window->keyboard.keys[GLFW_KEY_LEFT].down;
+    c_movement->directions.right = state.window->keyboard.keys[GLFW_KEY_D].down || state.window->keyboard.keys[GLFW_KEY_RIGHT].down;
     
     c_movement->directions.up = state.window->keyboard.keys[GLFW_KEY_SPACE].down;
     c_movement->directions.down = state.window->keyboard.keys[GLFW_KEY_LEFT_SHIFT].down;
