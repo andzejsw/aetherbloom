@@ -112,7 +112,7 @@ void window_create(FWindow init, FWindow destroy, FWindow tick,  FWindow update,
         exit(1);
     }
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 }
 
 static void button_array_tick(size_t n, struct Button *buttons) {

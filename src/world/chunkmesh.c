@@ -295,7 +295,11 @@ static void chunkmesh_mesh(struct ChunkMesh *self) {
 void chunkmesh_prepare_render(struct ChunkMesh *self) {
     if (self->chunk->world->throttles.mesh.count <
         self->chunk->world->throttles.mesh.max) {
-        if (self->flags.dirty) {
+        if (self->chunk->empty) {
+            self->flags.dirty = false;
+            self->flags.depth_sort = false;
+            return;
+        } else if (self->flags.dirty) {
             chunkmesh_mesh(self);
             self->flags.dirty = false;
             self->flags.depth_sort = false;
