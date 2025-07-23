@@ -20,12 +20,12 @@ ifeq ($(TARGET_OS), Linux)
 endif
 
 ifeq ($(TARGET_OS), Windows)
-	LDFLAGS += -lmingw32 -mconsole -lopengl32 -lgdi32 -luser32 -lkernel32 -lwinmm -lshell32 -lws2_32 lib/noise/libnoise.a -lm
+	LDFLAGS += -static -lmingw32 -mconsole -lopengl32 -lgdi32 -luser32 -lkernel32 -lwinmm -lshell32 -lws2_32 lib/noise/libnoise.a -lm -lpthread
 endif
 
 RES_FILE = game.res
 
-SRC = $(wildcard src/*.c) $(wildcard src/block/*.c) $(wildcard src/entity/*.c) $(wildcard src/gfx/*.c) $(wildcard src/ui/*.c) $(wildcard src/util/*.c) $(wildcard src/world/*.c) $(wildcard src/world/gen/*.c) lib/noise/noise1234.c
+SRC = $(wildcard src/*.c) $(wildcard src/block/*.c) $(wildcard src/entity/*.c) $(wildcard src/gfx/*.c) $(wildcard src/ui/*.c) $(wildcard src/util/*.c) $(wildcard src/world/*.c) $(wildcard src/world/gen/*.c) lib/noise/noise1234.c src/world/threadpool.c
 OBJ  = $(SRC:.c=.o)
 BIN = bin
 

@@ -48,9 +48,14 @@ struct Heightmap {
 // sets heightmap data for heightmap h at the specified (x, z) position
 #define HEIGHTMAP_SET(h, p, y) ((h)->data[HEIGHTMAP_INDEX(p)] = y)
 
+#include "threadpool.h"
+
 struct World {
     // entity component system
     struct ECS ecs;
+
+    // thread pool for chunk meshing
+    ThreadPool thread_pool;
 
     // the entity around which the world is viewed and the entity around which
     // the world is loaded

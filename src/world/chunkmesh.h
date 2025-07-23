@@ -5,6 +5,7 @@
 #include "../gfx/vao.h"
 #include "../gfx/vbo.h"
 #include "../util/util.h"
+#include <pthread.h>
 
 // forward declarations
 struct Chunk;
@@ -84,6 +85,8 @@ struct ChunkMesh {
         bool persist : 1;
     } flags;
 
+    pthread_mutex_t mutex;
+
     // buffer objects
     struct VAO vao;
     struct VBO vbo, ibo;
@@ -93,6 +96,7 @@ struct ChunkMesh *chunkmesh_create(struct Chunk *chunk);
 void chunkmesh_destroy(struct ChunkMesh *self);
 void chunkmesh_prepare_render(struct ChunkMesh *self);
 void chunkmesh_render(struct ChunkMesh *self, enum ChunkMeshPart part);
+void chunkmesh_generate(struct ChunkMesh *self);
 void chunkmesh_set_persist(struct ChunkMesh *self, bool persist);
 
 #endif

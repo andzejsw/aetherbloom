@@ -211,6 +211,7 @@ void world_load_chunk(struct World *self, ivec3s offset) {
     chunk_init(chunk, self, offset);
     chunk->generating = true;
     worldgen_generate(chunk);
+    chunk->mesh->flags.dirty = true;
 
     // set blocks which were previously unloaded
     for (size_t i = 0; i < self->unloaded_blocks.size; i++) {
@@ -232,6 +233,8 @@ void world_init(struct World *self) {
     ecs_init(&self->ecs, self);
     sky_init(&self->sky, self);
 
+    threadpool_init(&self->thread_pool, 4);
+
     self->ticks = 0;
 
     SRAND(NOW());
@@ -251,6 +254,8 @@ void world_init(struct World *self) {
 }
 
 void world_destroy(struct World *self) {
+    threadpool_destroy(&self->thread_pool);
+
     // destroy remaining entitites
     ecs_event(&self->ecs, ECS_DESTROY);
     ecs_destroy(&self->ecs);
@@ -429,7 +434,6 @@ void world_render(struct World *self) {
 void world_update(struct World *self) {
     // reset throttles
     self->throttles.load.count = 0;
-    self->throttles.mesh.count = 0;
 
     load_empty_chunks(self);
 
@@ -449,6 +453,12 @@ void world_tick(struct World *self) {
 
     world_foreach(self, chunk) {
         if (chunk != NULL) {
+            pthread_mutex_lock(&chunk->mesh->mutex);
+            if (chunk->mesh->flags.dirty) {
+                threadpool_add_task(&self->thread_pool, chunk);
+                self->throttles.mesh.count++;
+            }
+            pthread_mutex_unlock(&chunk->mesh->mutex);
             chunk_tick(chunk);
         }
     }

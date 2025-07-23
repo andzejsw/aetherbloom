@@ -37,6 +37,7 @@ struct ChunkMesh *chunkmesh_create(struct Chunk *chunk) {
     self->vao = vao_create();
     self->vbo = vbo_create(GL_ARRAY_BUFFER, false);
     self->ibo = vbo_create(GL_ELEMENT_ARRAY_BUFFER, false);
+    pthread_mutex_init(&self->mutex, NULL);
 
     for (size_t i = 0; i <= BUFFER_TYPE_LAST; i++) {
         buffer_init(&self->buffers[i], i);
@@ -53,17 +54,22 @@ void chunkmesh_destroy(struct ChunkMesh *self) {
     for (size_t i = 0; i <= BUFFER_TYPE_LAST; i++) {
         buffer_destroy(&self->buffers[i]);
     }
+
+    pthread_mutex_destroy(&self->mutex);
 }
 
 static void buffer_prepare(struct ChunkMeshBuffer *self) {
-    if (self->data == NULL || self->capacity < BUFFER_SIZES[self->type]) {
+    if (self->data == NULL) {
+        self->capacity = BUFFER_SIZES[self->type];
+        self->data = malloc(self->capacity);
+    } else if (self->capacity < BUFFER_SIZES[self->type]) {
         self->capacity = BUFFER_SIZES[self->type];
         self->data = realloc(self->data, self->capacity);
-        if (self->data == NULL) {
-            // Handle realloc failure, e.g., print an error and exit
-            fprintf(stderr, "Failed to reallocate chunk mesh buffer!\n");
-            exit(EXIT_FAILURE);
-        }
+    }
+
+    if (self->data == NULL) {
+        fprintf(stderr, "Failed to allocate chunk mesh buffer!\n");
+        exit(EXIT_FAILURE);
     }
 
     self->count = 0;
@@ -90,24 +96,31 @@ static void chunkmesh_flip_buffers(struct ChunkMesh *self) {
 // MUST be called immediately after meshing (before rendering)
 static void chunkmesh_finalize_data(struct ChunkMesh *self) {
     assert(self->buffers[DATA].data != NULL);
-    vbo_buffer(
-        self->vbo, self->buffers[DATA].data, 0,
-        self->buffers[DATA].count);
-
-    if (!self->flags.persist) {
-        free(self->buffers[DATA].data);
-        self->buffers[DATA].data = NULL;
-    }
 }
 
 // MUST be called immediately after meshing AND sorting (before rendering)
 static void chunkmesh_finalize_indices(struct ChunkMesh *self) {
     assert(self->buffers[INDICES].data != NULL);
+}
+
+static void chunkmesh_upload_to_gpu(struct ChunkMesh *self) {
+    assert(self->buffers[DATA].data != NULL);
+    vbo_buffer(
+        self->vbo, self->buffers[DATA].data, 0,
+        self->buffers[DATA].count);
+
+    assert(self->buffers[INDICES].data != NULL);
     vbo_buffer(
         self->ibo, self->buffers[INDICES].data, 0,
         self->buffers[INDICES].count);
+}
 
+static void chunkmesh_free_cpu_buffers(struct ChunkMesh *self) {
     if (!self->flags.persist) {
+        if (self->buffers[DATA].data != NULL) {
+            free(self->buffers[DATA].data);
+            self->buffers[DATA].data = NULL;
+        }
         if (self->buffers[INDICES].data != NULL) {
             free(self->buffers[INDICES].data);
             self->buffers[INDICES].data = NULL;
@@ -207,7 +220,7 @@ static void chunkmesh_sort(struct ChunkMesh *self, enum SortKind kind) {
     free(t_indices.data);
 }
 
-static void chunkmesh_mesh(struct ChunkMesh *self) {
+void chunkmesh_generate(struct ChunkMesh *self) {
     struct Chunk *chunk = self->chunk;
     struct BlockAtlas *block_atlas = &state.renderer.block_atlas;
 
@@ -288,35 +301,34 @@ static void chunkmesh_mesh(struct ChunkMesh *self) {
 
     chunkmesh_flip_buffers(self);
     chunkmesh_sort(self, SORT_FULL);
-    chunkmesh_finalize_data(self);
-    chunkmesh_finalize_indices(self);
 }
 
 void chunkmesh_prepare_render(struct ChunkMesh *self) {
-    if (self->chunk->world->throttles.mesh.count <
-        self->chunk->world->throttles.mesh.max) {
-        if (self->chunk->empty) {
-            self->flags.dirty = false;
-            self->flags.depth_sort = false;
-            return;
-        } else if (self->flags.dirty) {
-            chunkmesh_mesh(self);
-            self->flags.dirty = false;
-            self->flags.depth_sort = false;
-            self->chunk->world->throttles.mesh.count++;
-        } else if (self->flags.depth_sort) {
-            if (self->flags.persist &&
-                self->buffers[INDICES].data != NULL &&
-                self->buffers[FACES].data != NULL) {
-                chunkmesh_sort(self, SORT_PARTIAL);
-                chunkmesh_finalize_indices(self);
-            } else {
-                chunkmesh_mesh(self);
-            }
-            self->flags.depth_sort = false;
-            self->chunk->world->throttles.mesh.count++;
-        }
+    pthread_mutex_lock(&self->mutex);
+
+    if (self->chunk->empty) {
+        self->flags.dirty = false;
+        self->flags.depth_sort = false;
+        pthread_mutex_unlock(&self->mutex);
+        return;
     }
+
+    if (self->flags.finalize) {
+        chunkmesh_upload_to_gpu(self);
+        chunkmesh_free_cpu_buffers(self);
+        self->flags.finalize = false;
+    }
+
+    if (self->flags.depth_sort) {
+        if (!self->flags.dirty && self->flags.persist &&
+            self->buffers[INDICES].data != NULL &&
+            self->buffers[FACES].data != NULL) {
+            chunkmesh_sort(self, SORT_PARTIAL);
+            chunkmesh_finalize_indices(self);
+        }
+        self->flags.depth_sort = false;
+    }
+    pthread_mutex_unlock(&self->mutex);
 }
 
 void chunkmesh_render(struct ChunkMesh *self, enum ChunkMeshPart part) {
@@ -356,15 +368,4 @@ void chunkmesh_set_persist(struct ChunkMesh *self, bool persist) {
     }
 
     self->flags.persist = persist;
-
-    if (!self->flags.persist) {
-        if (self->buffers[INDICES].data != NULL) {
-            free(self->buffers[INDICES].data);
-            self->buffers[INDICES].data = NULL;
-        }
-        if (self->buffers[FACES].data != NULL) {
-            free(self->buffers[FACES].data);
-            self->buffers[FACES].data = NULL;
-        }
-    }
 }
