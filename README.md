@@ -22,7 +22,7 @@
 Unlike main repo, i decided to to build on Windows using wsl. Eveerything neccessary is building already.
 
 ##### TODO List
-1. Face Culling during Chunk Meshing
+1. Face Culling during Chunk Meshing ✔
     * Description: When generating the mesh for a chunk, only create faces that are exposed to the air or a transparent block. If a block
         face is adjacent to an opaque block (e.g., a dirt block next to another dirt block), that shared face is not added to the mesh. This
         significantly reduces the number of triangles that need to be rendered.
