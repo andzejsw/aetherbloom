@@ -31,8 +31,8 @@ Here are the packages you'll need to install in your WSL environment (assuming a
    3. `cmake`: Used for building the cglm and glfw libraries.
 
 You can install them using the following commands in your WSL terminal:
-   1 sudo apt update
-   2 sudo apt install -y mingw-w64 make cmake
+   1. `sudo apt update`
+   2. `sudo apt install -y mingw-w64 make cmake`
 
 To build project, run command `make` from root directory. Game will be created in bin directory. Run ./bin/game.exe from terminal to run the game and see it loging output in console.
 
