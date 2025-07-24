@@ -23,7 +23,18 @@
 #### Building
 
 ##### Windows
-Unlike main repo, i decided to build on Windows using wsl. Everything neccessary is building already.
+Unlike main repo, i decided to build on Windows using WSL from VS Code.
+Here are the packages you'll need to install in your WSL environment (assuming a Debian/Ubuntu-based distribution)            
+   1. `mingw-w64`: This package provides the x86_64-w64-mingw32-gcc compiler and windres utility, which are essential for compiling Windows
+      executables and resources.
+   2. `make`: To execute the Makefile.
+   3. `cmake`: Used for building the cglm and glfw libraries.
+
+You can install them using the following commands in your WSL terminal:
+   1 sudo apt update
+   2 sudo apt install -y mingw-w64 make cmake
+
+To build project, run command `make` from root directory. Game will be created in bin directory. Run ./bin/game.exe from terminal to run the game and see it loging output in console.
 
 ##### TODO List
 1. Greedy Meshing
