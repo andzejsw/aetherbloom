@@ -40,7 +40,7 @@ void sky_init(struct Sky *self, struct World *world) {
     state.renderer.clear_color = SKY_COLORS[DAY][FOG_PLANE];
 
     // place a unit quad of size 1.0 around (0, 0) in the VBO
-    vbo_buffer(self->vbo, (f32[]) {
+    vbo_buffer(&self->vbo, (f32[]) {
         // positions
         -0.5f, -0.5f, 0.0f,
         -0.5f, +0.5f, 0.0f,
@@ -54,7 +54,7 @@ void sky_init(struct Sky *self, struct World *world) {
         1.0f, 0.0f    
     }, 0, ((3 * 4) + (2 * 4)) * sizeof(f32));
 
-    vbo_buffer(self->ibo, (u32[]) {
+    vbo_buffer(&self->ibo, (u32[]) {
         3, 0, 1, 3, 1, 2
     }, 0, 6 * sizeof(u32));
 }

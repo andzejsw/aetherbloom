@@ -148,14 +148,14 @@ void renderer_quad_color(
     shader_uniform_mat4(self->shader, "m", model);
     shader_uniform_vec4(self->shader, "color", color);
 
-    vbo_buffer(self->vbo, (f32[]) {
+    vbo_buffer(&self->vbo, (f32[]) {
         0, 0, 0,
         0, size.y, 0,
         size.x, size.y, 0,
         size.x, 0, 0,
     }, 0, (4 * 3) * sizeof(f32));
 
-    vbo_buffer(self->ibo, (u32[]) {
+    vbo_buffer(&self->ibo, (u32[]) {
         3, 0, 1, 3, 1, 2
     }, 0, 6 * sizeof(u32));
 
@@ -177,7 +177,7 @@ void renderer_quad_texture(
     shader_uniform_texture2D(self->shader, "tex", texture, 0);
     shader_uniform_vec4(self->shader, "color", color);
 
-    vbo_buffer(self->vbo, (f32[]) {
+    vbo_buffer(&self->vbo, (f32[]) {
         0, 0, 0,
         0, size.y, 0,
         size.x, size.y, 0,
@@ -189,7 +189,7 @@ void renderer_quad_texture(
         uv_max.x, uv_min.y
     }, 0, ((4 * 3) + (4 * 2)) * sizeof(f32));
 
-    vbo_buffer(self->ibo, (u32[]) {
+    vbo_buffer(&self->ibo, (u32[]) {
         3, 0, 1, 3, 1, 2
     }, 0, 6 * sizeof(u32));
 
@@ -231,8 +231,8 @@ void renderer_aabb(
         min.x, max.y, max.z,
     };
 
-    vbo_buffer(self->vbo, vertices, 0, (8 * 3) * sizeof(f32));
-    vbo_buffer(self->ibo, indices, 0, 36 * sizeof(u32));
+    vbo_buffer(&self->vbo, vertices, 0, (8 * 3) * sizeof(f32));
+    vbo_buffer(&self->ibo, indices, 0, 36 * sizeof(u32));
 
     vao_attr(self->vao, self->vbo, 0, 3, GL_FLOAT, 0, 0);
 

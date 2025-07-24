@@ -106,12 +106,12 @@ static void chunkmesh_finalize_indices(struct ChunkMesh *self) {
 static void chunkmesh_upload_to_gpu(struct ChunkMesh *self) {
     assert(self->buffers[DATA].data != NULL);
     vbo_buffer(
-        self->vbo, self->buffers[DATA].data, 0,
+        &self->vbo, self->buffers[DATA].data, 0,
         self->buffers[DATA].count);
 
     assert(self->buffers[INDICES].data != NULL);
     vbo_buffer(
-        self->ibo, self->buffers[INDICES].data, 0,
+        &self->ibo, self->buffers[INDICES].data, 0,
         self->buffers[INDICES].count);
 }
 

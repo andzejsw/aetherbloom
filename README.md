@@ -18,6 +18,7 @@
     * Multi threaded chunk meshing
     * Face Culling during Chunk Meshing
     * Frustum Culling
+    * Optimized `glBufferData` Usage
 
 #### Building
 
@@ -70,10 +71,3 @@ Unlike main repo, i decided to to build on Windows using wsl. Eveerything necces
         * Needs a system to manage LOD transitions.
     * Benefits: Medium to High. Reduces GPU load for distant geometry, allowing for a larger render distance with less performance
         impact.
-
-6. Optimize `glBufferData` Usage:
-    * Description: Currently, glBufferData is used to upload chunk data. If chunks are frequently updated, consider using glBufferSubData
-        for partial updates or glMapBufferRange for persistent mapping to avoid repeated data transfers between CPU and GPU memory.
-    * Implementation Difficulty: Low to Medium.
-        * Requires understanding of OpenGL buffer update strategies.
-    * Benefits: Medium. Can reduce stuttering and improve performance during chunk updates, especially if the updates are small.
