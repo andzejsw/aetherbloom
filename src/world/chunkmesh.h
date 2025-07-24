@@ -83,6 +83,7 @@ struct ChunkMesh {
 
         // if true, index and face buffers are kept in memory after building
         bool persist : 1;
+        bool light_dirty : 1;
     } flags;
 
     pthread_mutex_t mutex;

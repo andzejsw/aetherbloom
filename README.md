@@ -17,7 +17,7 @@
 - Optimisations
     * Multi threaded chunk meshing
     * Face Culling during Chunk Meshing
-    * Frustum Culling
+    * Frustum Culling (For chunks and light updates in them)
     * Optimized `glBufferData` Usage
 
 #### Building

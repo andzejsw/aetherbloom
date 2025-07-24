@@ -400,6 +400,10 @@ void world_render(struct World *self) {
     // prepare (mesh) chunks from nearest to farthest
     world_foreach_ftb(self, c0) {
         if (c0 != NULL) {
+            if (c0->mesh->flags.light_dirty) {
+                light_apply(c0);
+                c0->mesh->flags.light_dirty = false;
+            }
             chunk_prepare(c0);
         } 
     }

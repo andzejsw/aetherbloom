@@ -2,6 +2,7 @@
 #define LIGHT_H
 
 #include "../util/util.h"
+#include "../gfx/frustum.h"
 
 // forward declarations
 struct Chunk;
@@ -36,6 +37,6 @@ void torchlight_remove(struct World *world, ivec3s pos);
 
 void light_remove(struct World *world, ivec3s pos);
 void light_apply(struct Chunk *chunk);
-void light_update(struct World *world, ivec3s pos);
+void light_update(struct World *world, ivec3s pos, Frustum *frustum);
 
 #endif

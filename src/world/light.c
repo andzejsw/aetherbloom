@@ -135,7 +135,13 @@ void torchlight_remove(struct World *world, ivec3s pos) {
 }
 
 // updates lighting at the specified position, propagating light around it
-void light_update(struct World *world, ivec3s pos) {
+void light_update(struct World *world, ivec3s pos, Frustum *frustum) {
+    // Check if the position is within the frustum before updating light
+    AABB block_aabb = {glms_vec3_add(IVEC3S2V(pos), (vec3s){{-0.5f, -0.5f, -0.5f}}), glms_vec3_add(IVEC3S2V(pos), (vec3s){{0.5f, 0.5f, 0.5f}})};
+    if (!frustum_intersect(frustum, block_aabb)) {
+        return;
+    }
+
     struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
 
     // i is [0..4] instead of [0..3] so sunlight is propagated as well

@@ -61,6 +61,7 @@ void chunk_on_modify(
     struct Chunk *self, ivec3s pos,
     u64 prev, u64 data) {
     self->mesh->flags.dirty = true;
+    self->mesh->flags.light_dirty = true;
 
     enum BlockId prev_block = chunk_data_to_block(prev),
         data_block = chunk_data_to_block(data);
@@ -86,7 +87,7 @@ void chunk_on_modify(
                 world_heightmap_recalculate(self->world, (ivec2s) {{ pos_w.x, pos_w.z }});
                 
                 // propagate lighting through this block
-                light_update(self->world, pos_w);
+                light_update(self->world, pos_w, &self->world->frustum);
             } else {
                 world_heightmap_update(self->world, pos_w);
                 
