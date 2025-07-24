@@ -14,6 +14,8 @@
 - Animated blocks (water + lava)
 - Distance fog
 - A whole lot of different block types
+- Added font support
+- Added F3 screen
 - Optimisations
     * Multi threaded chunk meshing
     * Face Culling during Chunk Meshing

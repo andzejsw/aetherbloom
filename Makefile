@@ -8,7 +8,17 @@ endif
 CFLAGS = -std=c11 -O3 -g -Wall -Wextra -Wpedantic -Wstrict-aliasing
 CFLAGS += -Wno-pointer-arith -Wno-unused-parameter
 CFLAGS += -Ilib/cglm/include -Ilib/glad/include -Ilib/glfw/include -Ilib/stb -Ilib/noise
+ifeq ($(TARGET_OS), Windows)
+CFLAGS += -Ilib/freetype_mingw/include
+else
+CFLAGS += -I/usr/local/include/freetype2
+endif
 LDFLAGS = lib/glad/src/glad.o lib/cglm/libcglm.a lib/glfw/src/libglfw3.a
+ifeq ($(TARGET_OS), Windows)
+LDFLAGS += -Llib/freetype_mingw/lib -lfreetype
+else
+LDFLAGS += -L/usr/local/lib -lfreetype
+endif
 
 # GLFW required frameworks on OSX
 ifeq ($(UNAME_S), Darwin)
@@ -25,7 +35,7 @@ endif
 
 RES_FILE = game.res
 
-SRC = $(wildcard src/*.c) $(wildcard src/block/*.c) $(wildcard src/entity/*.c) $(wildcard src/gfx/*.c) $(wildcard src/ui/*.c) $(wildcard src/util/*.c) $(wildcard src/world/*.c) $(wildcard src/world/gen/*.c) lib/noise/noise1234.c src/world/threadpool.c
+SRC = $(wildcard src/*.c) $(wildcard src/block/*.c) $(wildcard src/entity/*.c) $(wildcard src/gfx/*.c) $(wildcard src/ui/*.c) $(wildcard src/util/*.c) $(wildcard src/world/*.c) $(wildcard src/world/gen/*.c) lib/noise/noise1234.c src/world/threadpool.c src/gfx/font.c
 OBJ  = $(SRC:.c=.o)
 BIN = bin
 

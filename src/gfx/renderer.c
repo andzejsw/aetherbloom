@@ -34,6 +34,13 @@ void renderer_init(struct Renderer *self) {
             { .index = 0, .name = "position" }
         });
 
+    self->shaders[SHADER_BASIC_TEXT] = shader_create(
+        "res/shaders/basic_text.vs", "res/shaders/basic_text.fs",
+        2, (struct VertexAttr[]) {
+            { .index = 0, .name = "vertex" },
+            { .index = 1, .name = "TexCoords" }
+        });
+
 
     self->block_atlas = blockatlas_create(
         "res/images/blocks.png",
@@ -46,7 +53,9 @@ void renderer_init(struct Renderer *self) {
     self->textures[TEXTURE_SUN] = texture_create_from_path("res/images/sun.png");
     self->textures[TEXTURE_MOON] = texture_create_from_path("res/images/moon.png");
     self->textures[TEXTURE_HOTBAR] = texture_create_from_path("res/images/hotbar.png");
-    self->textures[TEXTURE_ZERO] = texture_create_from_path("res/images/game.png");
+
+    font_init(&self->font, "res/fonts/Roboto.ttf", 48);
+    
 
     self->vao = vao_create();
     self->vbo = vbo_create(GL_ARRAY_BUFFER, true);
@@ -67,6 +76,7 @@ void renderer_destroy(struct Renderer *self) {
     vao_destroy(self->vao);
     vbo_destroy(self->vbo);
     vbo_destroy(self->ibo);
+    font_destroy(&self->font);
 }
 
 void renderer_update(struct Renderer *self) {

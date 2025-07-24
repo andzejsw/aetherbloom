@@ -24,10 +24,8 @@ void ui_render(struct UI *self) {
     }
 
     if (state.show_overlay) {
-        renderer_quad_texture(
-            &state.renderer, state.renderer.textures[TEXTURE_ZERO],
-            (vec2s){{32.0f, 32.0f}}, GLMS_VEC4_ONE,
-            GLMS_VEC2_ZERO, GLMS_VEC2_ONE,
-            glms_translate(glms_mat4_identity(), (vec3s){{0.0f, state.window->size.y - 32.0f, 0.0f}}));
+        font_render_text(
+            &state.renderer.font, "0",
+            (vec2s){{0.0f, state.window->size.y - 48.0f}}, GLMS_VEC4_ONE, 1.0f);
     }
 }

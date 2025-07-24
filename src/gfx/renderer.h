@@ -7,29 +7,30 @@
 #include "shader.h"
 #include "vao.h"
 #include "vbo.h"
+#include "font.h"
 
 enum FillMode {
     FILL_MODE_FILL, FILL_MODE_LINE
 };
 
-#define SHADERS_LAST SHADER_BASIC_COLOR
+#define SHADERS_LAST SHADER_BASIC_TEXT
 enum ShaderType {
     SHADER_NONE = 0,
     SHADER_CHUNK,
     SHADER_SKY,
     SHADER_BASIC_TEXTURE,
-    SHADER_BASIC_COLOR
+    SHADER_BASIC_COLOR,
+    SHADER_BASIC_TEXT
 };
 
-#define TEXTURE_LAST TEXTURE_ZERO
+#define TEXTURE_LAST TEXTURE_HOTBAR
 enum Textures {
     TEXTURE_CROSSHAIR,
     TEXTURE_CLOUDS,
     TEXTURE_STAR,
     TEXTURE_SUN,
     TEXTURE_MOON,
-    TEXTURE_HOTBAR,
-    TEXTURE_ZERO
+    TEXTURE_HOTBAR
 };
 
 #define CAMERA_STACK_MAX 256
@@ -65,6 +66,8 @@ struct Renderer {
     struct {
         bool wireframe : 1;
     } flags;
+
+    struct Font font;
 };
 
 void renderer_init(struct Renderer *self);
