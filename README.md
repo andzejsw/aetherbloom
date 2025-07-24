@@ -23,7 +23,7 @@
 #### Building
 
 ##### Windows
-Unlike main repo, i decided to to build on Windows using wsl. Eveerything neccessary is building already.
+Unlike main repo, i decided to build on Windows using wsl. Everything neccessary is building already.
 
 ##### TODO List
 1. Greedy Meshing
