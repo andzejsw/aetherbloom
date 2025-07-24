@@ -54,7 +54,7 @@ void renderer_init(struct Renderer *self) {
     self->textures[TEXTURE_MOON] = texture_create_from_path("res/images/moon.png");
     self->textures[TEXTURE_HOTBAR] = texture_create_from_path("res/images/hotbar.png");
 
-    font_init(&self->font, "res/fonts/Roboto.ttf", 48);
+    font_init(&self->font, "res/fonts/Roboto.ttf", 30);
     
 
     self->vao = vao_create();

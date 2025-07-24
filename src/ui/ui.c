@@ -1,5 +1,12 @@
 #include "ui.h"
 #include "../state.h"
+#include "../entity/ecs.h"
+#include "../entity/ecscomponents.h"
+#include "../gfx/window.h" // Include window.h to access global window struct
+#include <stdio.h>
+#include <math.h>
+
+extern struct Window window; // Declare global window struct
 
 #define DECL_UI_FN(_name)\
     void ui_##_name(struct UI *self) {\
@@ -24,8 +31,23 @@ void ui_render(struct UI *self) {
     }
 
     if (state.show_overlay) {
-        font_render_text(
-            &state.renderer.font, "0",
-            (vec2s){{0.0f, state.window->size.y - 48.0f}}, GLMS_VEC4_ONE, 1.0f);
+        struct PositionComponent *c_position = ecs_get(state.world.entity_load, C_POSITION);
+        if (c_position) {
+            char coords_str[64];
+            snprintf(coords_str, sizeof(coords_str), "X: %.0f Y: %.0f Z: %.0f",
+                     floorf(c_position->position.x),
+                     floorf(c_position->position.y),
+                     floorf(c_position->position.z));
+
+            font_render_text(
+                &state.renderer.font, coords_str,
+                (vec2s){{10.0f, state.window->size.y - 34.0f}}, GLMS_VEC4_ONE, 1.0f);
+
+            char fps_str[32];
+            snprintf(fps_str, sizeof(fps_str), "FPS: %lld", window.fps);
+            font_render_text(
+                &state.renderer.font, fps_str,
+                (vec2s){{10.0f, state.window->size.y - 68.0f}}, GLMS_VEC4_ONE, 1.0f);
+        }
     }
 }

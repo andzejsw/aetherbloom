@@ -135,13 +135,13 @@ void font_render_text(struct Font *self, char *text, vec2s position, vec4s color
 
         // Update VBO for each character
         f32 vertices[6][4] = {
-            {xpos,     ypos + h,   ch.uv_min.x, ch.uv_max.y},
-            {xpos,     ypos,       ch.uv_min.x, ch.uv_min.y},
-            {xpos + w, ypos,       ch.uv_max.x, ch.uv_min.y},
+            {xpos,     ypos + h,   ch.uv_min.x, ch.uv_min.y},
+            {xpos,     ypos,       ch.uv_min.x, ch.uv_max.y},
+            {xpos + w, ypos,       ch.uv_max.x, ch.uv_max.y},
 
-            {xpos,     ypos + h,   ch.uv_min.x, ch.uv_max.y},
-            {xpos + w, ypos,       ch.uv_max.x, ch.uv_min.y},
-            {xpos + w, ypos + h,   ch.uv_max.x, ch.uv_max.y}
+            {xpos,     ypos + h,   ch.uv_min.x, ch.uv_min.y},
+            {xpos + w, ypos,       ch.uv_max.x, ch.uv_max.y},
+            {xpos + w, ypos + h,   ch.uv_max.x, ch.uv_min.y}
         };
 
         vbo_buffer(&self->vbo, (f32*)vertices, 0, sizeof(vertices));
