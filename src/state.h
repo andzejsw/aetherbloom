@@ -15,6 +15,7 @@ struct State {
     struct World world;
     struct UI ui;
     size_t ticks;
+    bool show_overlay;
 };
 
 // global state

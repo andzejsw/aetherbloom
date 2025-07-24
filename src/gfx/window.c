@@ -1,4 +1,5 @@
 #include "window.h"
+#include "../../src/state.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,9 @@ static void _key_callback(GLFWwindow *handle, int key, int scancode, int action,
     switch (action) {
         case GLFW_PRESS:
             window.keyboard.keys[key].down = true;
+            if (key == GLFW_KEY_F3) {
+                state.show_overlay = !state.show_overlay;
+            }
             break;
         case GLFW_RELEASE:
             window.keyboard.keys[key].down = false;

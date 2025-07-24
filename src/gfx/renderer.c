@@ -46,6 +46,7 @@ void renderer_init(struct Renderer *self) {
     self->textures[TEXTURE_SUN] = texture_create_from_path("res/images/sun.png");
     self->textures[TEXTURE_MOON] = texture_create_from_path("res/images/moon.png");
     self->textures[TEXTURE_HOTBAR] = texture_create_from_path("res/images/hotbar.png");
+    self->textures[TEXTURE_ZERO] = texture_create_from_path("res/images/game.png");
 
     self->vao = vao_create();
     self->vbo = vbo_create(GL_ARRAY_BUFFER, true);
