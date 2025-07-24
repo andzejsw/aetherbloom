@@ -267,6 +267,7 @@ static void _set(struct Chunk *chunk, s32 x, s32 y, s32 z, u32 d) {
 
 
 void worldgen_generate(struct Chunk *chunk) {
+
     SRAND(chunk->world->seed + ivec3shash(chunk->offset));
 
     struct Heightmap *heightmap = chunk_get_heightmap(chunk);

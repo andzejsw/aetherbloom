@@ -286,7 +286,7 @@ void light_apply(struct Chunk *chunk) {
         queue->size = 0;
 
         for (size_t j = 0; j < torchlight_queue->size; j++) {
-            struct LightNode n = torchlight_queue->elements[i];
+            struct LightNode n = torchlight_queue->elements[j];
             if ((n.value & mask) != 0) {
                 ENQUEUE(queue, ((struct LightNode) { .pos = n.pos }));
             }

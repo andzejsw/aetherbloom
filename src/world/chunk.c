@@ -10,6 +10,10 @@ void chunk_init(struct Chunk *self, struct World *world, ivec3s offset) {
     self->position = glms_ivec3_mul(offset, CHUNK_SIZE);
     self->data = calloc(1, CHUNK_VOLUME * sizeof(u64));
     self->mesh = chunkmesh_create(self);
+
+    // initialize AABB
+    self->aabb[0] = IVEC3S2V(self->position);
+    self->aabb[1] = glms_vec3_add(IVEC3S2V(self->position), CHUNK_SIZE_F);
 }
 
 void chunk_destroy(struct Chunk *self) {

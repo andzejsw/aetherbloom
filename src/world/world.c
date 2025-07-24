@@ -392,6 +392,11 @@ void world_render(struct World *self) {
     sky_render(&self->sky);
     state.renderer.clear_color = self->sky.clear_color;
 
+    // extract frustum
+    mat4s vp;
+    glm_mat4_mul(state.renderer.perspective_camera.view_proj.proj.raw, state.renderer.perspective_camera.view_proj.view.raw, vp.raw);
+    frustum_extract(&self->frustum, vp);
+
     // prepare (mesh) chunks from nearest to farthest
     world_foreach_ftb(self, c0) {
         if (c0 != NULL) {
@@ -409,11 +414,10 @@ void world_render(struct World *self) {
     shader_uniform_vec4(state.renderer.shaders[SHADER_CHUNK], "fog_color", self->sky.fog_color);
     shader_uniform_float(state.renderer.shaders[SHADER_CHUNK], "fog_near", self->sky.fog_near);
     shader_uniform_float(state.renderer.shaders[SHADER_CHUNK], "fog_far", self->sky.fog_far);
-    
 
     // render solid geometry in no particular order
     world_foreach(self, c1) {
-        if (c1 != NULL) {
+        if (c1 != NULL && frustum_intersect(&self->frustum, c1->aabb)) {
             chunk_render(c1, BASE);
         }
     }
@@ -421,7 +425,7 @@ void world_render(struct World *self) {
     // render transparent geometry back to front
     glDisable(GL_CULL_FACE);
     world_foreach_btf(self, c2) {
-        if (c2 != NULL) {
+        if (c2 != NULL && frustum_intersect(&self->frustum, c2->aabb)) {
             chunk_render(c2, CHUNK_MESH_TRANSPARENT);
         }
     }

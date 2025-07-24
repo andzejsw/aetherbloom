@@ -54,6 +54,9 @@ struct Chunk {
     // offset (in chunks) and position (in blocks)
     ivec3s offset, position;
 
+    // axis-aligned bounding box
+    AABB aabb;
+
     // chunk data stored in a 3D array
     // each u64 has the following bit fields:
     // - 28 bits metadata/extra

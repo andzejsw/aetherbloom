@@ -10,6 +10,7 @@
 #include "sky.h"
 #include "../entity/ecs.h"
 #include "gen/worldgen.h"
+#include "../gfx/frustum.h"
 
 #define DAY_TICKS (14 * 60 * TICKRATE)
 #define NIGHT_TICKS (10 * 60 * TICKRATE)
@@ -64,6 +65,9 @@ struct World {
 
     // sky state
     struct Sky sky;
+
+    // view frustum for culling
+    Frustum frustum;
 
     // tick counter
     u64 ticks;

@@ -31,7 +31,7 @@ Unlike main repo, i decided to to build on Windows using wsl. Eveerything necces
     * Performance/FPS Gains: High. This is one of the most fundamental and impactful optimizations for voxel games, as it drastically
         reduces the amount of geometry sent to the GPU.
 
-2. Frustum Culling (Chunk Level)
+2. Frustum Culling (Chunk Level) ✔
     * Description: Before rendering, check if an entire chunk's bounding box is within the camera's view frustum (the visible area). If a
         chunk is completely outside this frustum, it is skipped entirely, preventing unnecessary rendering calls.
     * Ease of Implementation: Medium. Involves calculating the bounding volume for each chunk and implementing a frustum-culling test
