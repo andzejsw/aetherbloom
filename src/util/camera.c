@@ -7,6 +7,8 @@ void perspective_camera_init(struct PerspectiveCamera *self, f32 fov) {
     self->aspect = ((f32) window.size.x) / ((f32) window.size.y);
     self->znear = 0.01f;
     self->zfar = 1000.0f;
+    self->pitch = 0.0f;
+    self->yaw = PI;
     perspective_camera_update(self);
 }
 

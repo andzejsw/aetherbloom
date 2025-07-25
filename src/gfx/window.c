@@ -191,10 +191,10 @@ void window_loop() {
         }
         window.tick_remainder = max(tick_time, 0);
     
+        glfwPollEvents();
         _update();
         _render();
         glfwSwapBuffers(window.handle);
-        glfwPollEvents();
     }
 
     _destroy();
