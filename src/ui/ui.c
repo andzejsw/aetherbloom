@@ -49,6 +49,12 @@ void ui_render(struct UI *self) {
             font_render_text(
                 &state.renderer.font, fps_str,
                 (vec2s){{10.0f, state.window->size.y - 68.0f}}, GLMS_VEC4_ONE, 1.0f);
+
+            char light_str[32];
+            snprintf(light_str, sizeof(light_str), "Light: %d", TORCHLIGHT_I(world_get_torchlight(&state.world, c_position->block)));
+            font_render_text(
+                &state.renderer.font, light_str,
+                (vec2s){{10.0f, state.window->size.y - 102.0f}}, GLMS_VEC4_ONE, 1.0f);
         }
 
         struct BlockLookComponent *c_blocklook = ecs_get(state.world.entity_load, C_BLOCKLOOK);
