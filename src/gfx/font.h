@@ -33,4 +33,6 @@ void font_init(struct Font *self, char *path, u32 font_size);
 void font_destroy(struct Font *self);
 void font_render_text(struct Font *self, char *text, vec2s position, vec4s color, f32 scale);
 
+f32 font_get_text_width(struct Font *self, char *text, f32 scale);
+
 #endif

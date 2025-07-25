@@ -154,3 +154,12 @@ void font_render_text(struct Font *self, char *text, vec2s position, vec4s color
     glBindTexture(GL_TEXTURE_2D, 0);
     vao_unbind();
 }
+
+f32 font_get_text_width(struct Font *self, char *text, f32 scale) {
+    f32 width = 0.0f;
+    for (char *p = text; *p; p++) {
+        struct Character ch = self->characters[(u8)*p];
+        width += (ch.advance >> 6) * scale;
+    }
+    return width;
+}
