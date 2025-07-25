@@ -190,7 +190,10 @@ void chunk_heightmap_recalculate(struct Chunk *chunk) {
 
 // recalculate the heightmap value at the specified x, z coordinate
 void world_heightmap_recalculate(struct World *self, ivec2s p) {
-    assert(world_in_bounds(self, (ivec3s) {{ p.x, 0, p.y }}));
+    if (!world_in_bounds(self, (ivec3s) {{ p.x, 0, p.y }})) {
+        return;
+    }
+    
     s64 y_min = self->chunks_origin.y * CHUNK_SIZE.y,
         y_max = (self->chunks_origin.y + self->chunks_size) * CHUNK_SIZE.y;
 
