@@ -52,6 +52,10 @@ static void chunk_get_bordering_chunks(struct Chunk *self, ivec3s pos, struct Ch
 
 // MUST be run once a chunk has completed generating
 void chunk_after_generate(struct Chunk *self) {
+    if (self->empty) {
+        return;
+    }
+
     chunk_heightmap_recalculate(self);
     light_apply(self);
 }
