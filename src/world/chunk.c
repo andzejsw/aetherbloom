@@ -65,7 +65,6 @@ void chunk_on_modify(
     struct Chunk *self, ivec3s pos,
     u64 prev, u64 data) {
     self->mesh->flags.dirty = true;
-    self->mesh->flags.light_dirty = true;
 
     enum BlockId prev_block = chunk_data_to_block(prev),
         data_block = chunk_data_to_block(data);
