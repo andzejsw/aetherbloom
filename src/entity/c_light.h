@@ -5,11 +5,11 @@
 #include "../world/light.h"
 
 struct LightComponent {
-    Torchlight light;
+    Blocklight light;
 
     struct {
         ivec3s pos;
-        Torchlight light;
+        Blocklight light;
         bool enabled;
     } last;
     

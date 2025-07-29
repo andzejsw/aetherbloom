@@ -82,7 +82,7 @@ void chunk_on_modify(
         }
 
         if (block.can_emit_light) {
-            torchlight_add(self->world, pos_w, block.get_torchlight(self->world, pos_w));
+            blocklight_add(self->world, pos_w, block.get_blocklight(self->world, pos_w));
         }
 
         if (!self->generating) {

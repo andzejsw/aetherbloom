@@ -10,7 +10,7 @@ static void get_animation_frames(ivec2s out[BLOCK_ATLAS_FRAMES]) {
     return;
 }
 
-static Torchlight get_torchlight(struct World *world, ivec3s pos) {
+static Blocklight get_blocklight(struct World *world, ivec3s pos) {
     return 0x0000;
 }
 
@@ -43,7 +43,7 @@ struct Block BLOCK_DEFAULT = {
     .mesh_type = BLOCKMESH_DEFAULT,
     .get_texture_location = get_texture_location,
     .get_animation_frames = get_animation_frames,
-    .get_torchlight = get_torchlight,
+    .get_blocklight = get_blocklight,
     .get_aabb = get_aabb,
     .get_mesh_information = get_mesh_information
 };

@@ -74,7 +74,7 @@ struct Block {
         vec3s *offset_out, vec3s *size_out,
         ivec2s *uv_offset_out, ivec2s *uv_size_out);
     void (*get_animation_frames)(ivec2s out[BLOCK_ATLAS_FRAMES]);
-    Torchlight (*get_torchlight)(struct World *world, ivec3s pos);
+    Blocklight (*get_blocklight)(struct World *world, ivec3s pos);
     void (*get_aabb)(struct World *world, ivec3s pos, AABB dest);
 };
 

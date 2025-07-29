@@ -208,7 +208,7 @@ static inline bool world_contains(struct World *self, ivec3s pos) {
     }
 
 WORLD_DECL_DATA(enum BlockId, block)
-WORLD_DECL_DATA(Torchlight, torchlight)
+WORLD_DECL_DATA(Blocklight, blocklight)
 WORLD_DECL_DATA(Sunlight, sunlight)
 WORLD_DECL_DATA(Light, light)
 WORLD_DECL_DATA(u32, metadata)

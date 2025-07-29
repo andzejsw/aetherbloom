@@ -9,8 +9,8 @@ static ivec2s get_texture_location(struct World *world, ivec3s pos, enum Directi
     return (ivec2s) {{ 0, 2 }};
 }
 
-static Torchlight get_torchlight(struct World *world, ivec3s pos) {
-    return TORCHLIGHT_OF(0xF, 0xB, 0x5, 0xF);
+static Blocklight get_blocklight(struct World *world, ivec3s pos) {
+    return BLOCKLIGHT_OF(0xF, 0xB, 0x5, 0xF);
 }
 
 static void get_mesh_information(
@@ -37,7 +37,7 @@ void torch_init() {
     torch.can_emit_light = true;
     torch.mesh_type = BLOCKMESH_CUSTOM;
     torch.get_texture_location = get_texture_location;
-    torch.get_torchlight = get_torchlight;
+    torch.get_blocklight = get_blocklight;
     torch.get_mesh_information = get_mesh_information;
     BLOCKS[TORCH] = torch;
 }

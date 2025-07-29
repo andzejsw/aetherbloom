@@ -58,7 +58,7 @@ static void tick(struct ControlComponent *c_control, struct Entity entity) {
         struct PositionComponent *c_position = ecs_get(entity, C_POSITION);
 
         c_light->flags.enabled = true;
-        c_light->light = held_block.get_torchlight(entity.ecs->world, c_position->block);
+        c_light->light = held_block.get_blocklight(entity.ecs->world, c_position->block);
     } else {
         c_light->flags.enabled = false;
     }

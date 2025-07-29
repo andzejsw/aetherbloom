@@ -51,7 +51,7 @@ void ui_render(struct UI *self) {
                 (vec2s){{10.0f, state.window->size.y - 68.0f}}, GLMS_VEC4_ONE, 1.0f);
 
             char light_str[32];
-            snprintf(light_str, sizeof(light_str), "Light: %d", TORCHLIGHT_I(world_get_torchlight(&state.world, c_position->block)));
+            snprintf(light_str, sizeof(light_str), "Light: %d", BLOCKLIGHT_I(world_get_blocklight(&state.world, c_position->block)));
             font_render_text(
                 &state.renderer.font, light_str,
                 (vec2s){{10.0f, state.window->size.y - 102.0f}}, GLMS_VEC4_ONE, 1.0f);
