@@ -9,6 +9,7 @@ void tallgrass_init() {
     tallgrass.id = TALLGRASS;
     tallgrass.transparent = true;
     tallgrass.solid = false;
+    tallgrass.opacity = 0;
     tallgrass.mesh_type = BLOCKMESH_SPRITE;
     tallgrass.get_texture_location = get_texture_location;
     BLOCKS[TALLGRASS] = tallgrass;

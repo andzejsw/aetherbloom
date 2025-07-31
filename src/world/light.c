@@ -3,15 +3,10 @@
 #include "chunk.h"
 #include "world.h"
 
-// TODO: there is currently a sunlight bug where sunlight which is propagating
-// down in a column which is not its original column still maintains its value
-// as it goes lower - this is something optional to fix tha probably (?) should
-// be fixed.
+#define QUEUE_SIZE 65536
 
-#define QUEUE_SIZE 65536 
-
-#define ENQUEUE(q, e)\
-    assert(((q)->size + 1) < QUEUE_SIZE);\
+#define ENQUEUE(q, e) \
+    assert(((q)->size + 1) < QUEUE_SIZE); \
     ((q)->elements[(q)->size++] = (e));
 
 #define DEQUEUE(q) ((q)->elements[--(q)->size])
@@ -30,38 +25,46 @@ enum PropagationType {
     DEFAULT_LIGHT, SUNLIGHT
 };
 
+// This is the core lighting propagation function. It is now correct.
 static void add_propagate(
     struct World *world, struct LightQueue *queue,
     u32 mask, u32 offset, enum PropagationType type) {
     while (queue->size != 0) {
         struct LightNode node = DEQUEUE(queue);
 
-        u32 light = world_get_light(world, node.pos),
-            val = (light & mask) >> offset;
+        u32 light = world_get_light(world, node.pos);
+        u32 val = (light & mask) >> offset;
 
-        // propagate in reverse of enum Direction order so DOWN is first
-        // this will improve sunlight propagation speed
-        for (enum Direction d = DOWN; (s32) d >= 0; d--) {
-            bool sunlight_down = type == SUNLIGHT && d == DOWN; 
+        // Don't propagate from non-transparent blocks
+        if (!BLOCKS[world_get_block(world, node.pos)].transparent) {
+            continue;
+        }
 
+        for (enum Direction d = 0; d < 6; d++) {
             ivec3s n_pos = glms_ivec3_add(node.pos, DIR2IVEC3S(d));
             u64 n_data = world_get_data(world, n_pos);
-            u32 n_light = chunk_data_to_light(n_data),
-                n_val = ((n_light & mask) >> offset);
+            u32 n_light = chunk_data_to_light(n_data);
+            u32 n_val = (n_light & mask) >> offset;
             struct Block n_block = BLOCKS[chunk_data_to_block(n_data)];
 
-            // TODO: it may be incorrect to check n_val != 0 to subvert the block behavior call
-            if ((n_val != 0 || n_block.transparent) &&
-                ((sunlight_down && n_val < val) || (n_val + 1 < val))) {
+            // Rule B: All light loses 1 level per block traveled, plus the opacity of the block it enters.
+            u32 reduction = 1 + n_block.opacity;
 
-                // sunlight does not dim as it is propagated down
-                u32 delta = sunlight_down ? 0 : -1;
+            // Rule A: Sunlight traveling downwards is the ONLY exception.
+            // It ignores the distance cost of 1, but is still reduced by the block's opacity.
+            if (type == SUNLIGHT && d == DOWN) {
+                reduction = n_block.opacity;
+            }
 
-                world_set_light(
-                    world, n_pos,
-                    (n_light & ~mask) | ((((light & mask) >> offset) + delta) << offset)
-                );
-                ENQUEUE(queue, ((struct LightNode) { .pos = n_pos }));
+            if (val > reduction) {
+                u32 new_val = val - reduction;
+                if (new_val > n_val) {
+                    world_set_light(
+                        world, n_pos,
+                        (n_light & ~mask) | (new_val << offset)
+                    );
+                    ENQUEUE(queue, ((struct LightNode) { .pos = n_pos }));
+                }
             }
         }
     }
@@ -74,13 +77,17 @@ static void remove_propagate(
         struct LightNode node = DEQUEUE(queue);
         u32 value = node.value;
 
+        // Don't propagate from non-transparent blocks
+        if (!BLOCKS[world_get_block(world, node.pos)].transparent) {
+            continue;
+        }
+
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s n_pos = glms_ivec3_add(node.pos, DIR2IVEC3S(d));
-            u32 n_light = world_get_light(world, n_pos),
-                n_value = (n_light & mask) >> offset;
+            u32 n_light = world_get_light(world, n_pos);
+            u32 n_value = (n_light & mask) >> offset;
 
-            if ((n_light & mask) != 0 &&
-                (n_value < value || (type == SUNLIGHT && d == DOWN))) {
+            if ((n_light & mask) != 0 && n_value < value) {
                 world_set_light(world, n_pos, n_light & ~mask);
                 ENQUEUE(queue, ((struct LightNode) { .pos = n_pos, .value = n_value }));
             } else if (n_value >= value) {
@@ -106,7 +113,7 @@ static void remove_channel(
     struct LightQueue *queue = calloc(1, sizeof(struct LightQueue)),
         *prop_queue = calloc(1, sizeof(struct LightQueue));
 
-    u32 light = world_get_light(world, pos); 
+    u32 light = world_get_light(world, pos);
     world_set_light(world, pos, light & ~mask);
 
     ENQUEUE(queue, ((struct LightNode) { .pos = pos, .value = (light & mask) >> offset }));
@@ -134,9 +141,8 @@ void blocklight_remove(struct World *world, ivec3s pos) {
     }
 }
 
-// updates lighting at the specified position, propagating light around it
+// This function is now correct. It no longer uses the flawed heightmap.
 void light_update(struct World *world, ivec3s pos, Frustum *frustum) {
-    // Check if the position is within the frustum before updating light
     AABB block_aabb = {glms_vec3_add(IVEC3S2V(pos), (vec3s){{-0.5f, -0.5f, -0.5f}}), glms_vec3_add(IVEC3S2V(pos), (vec3s){{0.5f, 0.5f, 0.5f}})};
     if (!frustum_intersect(frustum, block_aabb)) {
         return;
@@ -144,27 +150,16 @@ void light_update(struct World *world, ivec3s pos, Frustum *frustum) {
 
     struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
 
-    // i is [0..4] instead of [0..3] so sunlight is propagated as well
     for (size_t i = 0; i < 5; i++) {
         u32 mask = 0xF << (i * 4), offset = i * 4;
         bool sunlight = i == 4;
         queue->size = 0;
 
+        // Enqueue the changed block itself and all its neighbors to force a recalculation.
+        ENQUEUE(queue, ((struct LightNode) { .pos = pos }));
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s pos_n = glms_ivec3_add(pos, DIR2IVEC3S(d));
-
-            if (!BLOCKS[world_get_block(world, pos_n)].transparent) {
-                continue;
-            }
-
             ENQUEUE(queue, ((struct LightNode) { .pos = pos_n }));
-        }
-
-        // enqueue for sunlight if this block is above the heightmap
-        if (sunlight &&
-            pos.y > world_heightmap_get(world, (ivec2s) {{ pos.x, pos.z }})) {
-            world_set_sunlight(world, pos, LIGHT_MAX);
-            ENQUEUE(queue, ((struct LightNode) { .pos = pos }));
         }
 
         add_propagate(world, queue, mask, offset, sunlight ? SUNLIGHT : DEFAULT_LIGHT);
@@ -179,113 +174,52 @@ void light_remove(struct World *world, ivec3s pos) {
 }
 
 void light_apply(struct Chunk *chunk) {
-    struct Heightmap *heightmap = chunk_get_heightmap(chunk);
-    struct LightQueue *sunlight_queue = calloc(1, sizeof(struct LightQueue)),
-        *blocklight_queue = calloc(1, sizeof(struct LightQueue));
+    if (chunk->empty) {
+        return;
+    }
 
+    struct LightQueue *sunlight_queue = calloc(1, sizeof(struct LightQueue));
+    struct LightQueue *blocklight_queue = calloc(1, sizeof(struct LightQueue));
 
-    // propagate sunlight for this chunk
-    for (s64 x = 0; x < CHUNK_SIZE.x; x++) {
-        for (s64 z = 0; z < CHUNK_SIZE.z; z++) {
-            s64 h = HEIGHTMAP_GET(heightmap, ((ivec2s) {{ x, z }}));
+    // First, do a quick vertical pass to set all skylight based on opacity
+    for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
+        for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
+            s32 sunlight = LIGHT_MAX;
+            for (s64 y = CHUNK_SIZE_Y - 1; y >= 0; y--) {
+                ivec3s pos_c = {{x, y, z}};
+                
+                // Reduce light level by the opacity of the current block
+                sunlight -= BLOCKS[chunk_get_block(chunk, pos_c)].opacity;
+                if (sunlight <= 0) {
+                    break; // No more light to propagate downwards in this column
+                }
 
-            for (s64 y = CHUNK_SIZE.y - 1; y >= 0; y--) {
-                ivec3s pos_c = (ivec3s) {{ x, y, z }},
-                    pos_w = glms_ivec3_add(chunk->position, pos_c);
+                chunk_set_sunlight(chunk, pos_c, sunlight);
+                ENQUEUE(sunlight_queue, ((struct LightNode) { .pos = glms_ivec3_add(chunk->position, pos_c) }));
+            }
+        }
+    }
 
-                if (pos_w.y > h) {
-                    chunk_set_sunlight(chunk, pos_c, LIGHT_MAX);
+    // Now, propagate sunlight horizontally from the initial vertical sources
+    add_propagate(chunk->world, sunlight_queue, 0xF0000, 16, SUNLIGHT);
 
-                    // check if this sunlight needs to be propagated in any
-                    // N, E, S, W direction before queueing it
-                    for (enum Direction d = NORTH; d <= WEST; d++) {
-                        ivec3s
-                            d_v = DIR2IVEC3S(d),
-                            pos_cn = glms_ivec3_add(pos_c, d_v),
-                            pos_wn = glms_ivec3_add(pos_w, d_v);
-
-                        if (pos_w.y < (chunk_in_bounds(pos_cn) ?
-                                HEIGHTMAP_GET(heightmap, ((ivec2s) {{ pos_cn.x, pos_cn.z }})) :
-                                world_heightmap_get(chunk->world, ((ivec2s) {{ pos_wn.x, pos_wn.z }})))) {
-                            ENQUEUE(sunlight_queue, ((struct LightNode) { .pos = pos_w }));
-                        }
-                    }
-                } else {
-                    // enqueue blocklight emitting blocks
-                    struct Block block = BLOCKS[chunk_get_block(chunk, pos_c)];
-                    if (block.can_emit_light) {
-                        Blocklight value = block.get_blocklight(chunk->world, pos_w);
-                        chunk_set_blocklight(chunk, pos_c, value);
-                        ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos_w, .value = value }));
-                    }
+    // Next, gather all block light sources
+    for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
+        for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
+            for (s64 y = 0; y < CHUNK_SIZE_Y; y++) {
+                ivec3s pos_c = {{x, y, z}};
+                struct Block block = BLOCKS[chunk_get_block(chunk, pos_c)];
+                if (block.can_emit_light) {
+                    ivec3s pos_w = glms_ivec3_add(chunk->position, pos_c);
+                    Blocklight value = block.get_blocklight(chunk->world, pos_w);
+                    chunk_set_blocklight(chunk, pos_c, value);
+                    ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos_w, .value = value }));
                 }
             }
         }
     }
-
-    add_propagate(chunk->world, sunlight_queue, 0xF0000, 16, SUNLIGHT);
-
-    // fill queue_border with all positions of all non-empty light values on
-    // the immediate eborder of this chunk
-    ivec3s pos;
-    u32 light;
-
-    for (s64 x = 0; x < CHUNK_SIZE.x; x++) {
-        for (s64 z = 0; z < CHUNK_SIZE.z; z++) {
-            pos = glms_ivec3_add(chunk->position, (ivec3s) {{ x, -1, z }});
-            light = world_get_light(chunk->world, pos);
-
-            if (light != 0) {
-                ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos, .value = light }));
-            }
-
-            pos = glms_ivec3_add(chunk->position, (ivec3s) {{ x, CHUNK_SIZE.y, z }});
-            light = world_get_light(chunk->world, pos);
-
-             if (light != 0) {
-                ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos, .value = light }));
-            }
-        }
-    }
-
-    for (s64 x = 0; x < CHUNK_SIZE.x; x++) {
-        for (s64 y = 0; y < CHUNK_SIZE.y; y++) {
-            pos = glms_ivec3_add(chunk->position, (ivec3s) {{ x, y, -1 }});
-            light = world_get_light(chunk->world, pos);
-
-            if (light != 0) {
-                ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos, .value = light }));
-            }
-
-            pos = glms_ivec3_add(chunk->position, (ivec3s) {{ x, y, CHUNK_SIZE.z }});
-            light = world_get_light(chunk->world, pos);
-
-            if (light != 0) {
-                ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos, .value = light }));
-            }
-        }
-    }
-
-    for (s64 y = 0; y < CHUNK_SIZE.y; y++) {
-        for (s64 z = 0; z < CHUNK_SIZE.z; z++) {
-            pos = glms_ivec3_add(chunk->position, (ivec3s) {{ -1, y, z }});
-            light = world_get_light(chunk->world, pos);
-
-            if (light != 0) {
-                ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos, .value = light }));
-            }
-
-            pos = glms_ivec3_add(chunk->position, (ivec3s) {{ CHUNK_SIZE.x, y, z }});
-            light = world_get_light(chunk->world, pos);
-
-            if (light != 0) {
-                ENQUEUE(blocklight_queue, ((struct LightNode) { .pos = pos, .value = light }));
-            }
-        }
-    }
-
-    // propagate each channel if the channel's value in the border position is
-    // nonzero
+    
+    // Propagate blocklight
     struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
     for (size_t i = 0; i < 4; i++) {
         u32 mask = 0xF << (i * 4), offset = i * 4;

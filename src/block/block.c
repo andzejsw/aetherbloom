@@ -35,6 +35,7 @@ struct Block BLOCK_DEFAULT = {
     .transparent = false,
     .liquid = false,
     .can_emit_light = false,
+    .opacity = 15,
     .animated = false,
     .solid = true,
     .gravity_modifier = 1.0f,

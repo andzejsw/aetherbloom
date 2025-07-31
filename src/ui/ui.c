@@ -50,8 +50,13 @@ void ui_render(struct UI *self) {
                 &state.renderer.font, fps_str,
                 (vec2s){{10.0f, state.window->size.y - 68.0f}}, GLMS_VEC4_ONE, 1.0f);
 
-            char light_str[32];
-            snprintf(light_str, sizeof(light_str), "Light: %d", BLOCKLIGHT_I(world_get_blocklight(&state.world, c_position->block)));
+            char light_str[64];
+            Blocklight block_light = world_get_blocklight(&state.world, c_position->block);
+            Sunlight sky_light = world_get_sunlight(&state.world, c_position->block);
+            snprintf(light_str, sizeof(light_str), "Light: %d (Sky: %d, Block: %d)",
+                     max(BLOCKLIGHT_I(block_light), sky_light),
+                     sky_light,
+                     BLOCKLIGHT_I(block_light));
             font_render_text(
                 &state.renderer.font, light_str,
                 (vec2s){{10.0f, state.window->size.y - 102.0f}}, GLMS_VEC4_ONE, 1.0f);
