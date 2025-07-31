@@ -30,34 +30,24 @@ void main() {
     // - (4) G
     // - (4) B
     // - (4) intensity
-    vec3 light = vec3(
+    // block light
+    vec3 block_light_color = vec3(
         float((color & 0x0F000U) >> 12U) / 15.0,
         float((color & 0x00F00U) >>  8U) / 15.0,
         float((color & 0x000F0U) >>  4U) / 15.0
-    ) * (float(color & 0x0000FU) / 15.0);
+    );
+    uint block_light_level = (color & 0x0000FU);
+    float block_light_factor = pow(0.8, 0.6 * (15.0 - float(block_light_level)));
+    vec3 block_light = block_light_color * block_light_factor;
 
-    light = max(vec3(sunlight_color.rgb) * (float((color & 0xF0000U) >> 16U) / 15.0), light);
+    // sun light
+    uint sun_light_level = (color & 0xF0000U) >> 16U;
+    float sun_light_factor = pow(0.8, 0.6 * (15.0 - float(sun_light_level)));
+    vec3 sun_light = vec3(sunlight_color.rgb) * sun_light_factor;
 
-    // adjust light range to prevent entirely black lighting
-    const float min_light = 0.0025;
-    light *= vec3(1.0 - min_light);
-    light += vec3(min_light);
+    vec3 light = max(sun_light, block_light);
 
-    // adjust lighting for direction
-    uint direction = (color & 0x700000U) >> 20U;
-    if (direction == UP) {
-        light *= 1.0;
-    } else if (direction == EAST || direction == WEST) {
-        light *= 0.8;
-    } else if (direction == NORTH || direction == SOUTH) {
-        light *= 0.6;
-    } else {
-        light *= 0.5;
-    }
-
-    // set and gamma correct
     v_color = vec4(light, 1.0);
-    v_color = vec4(pow(v_color.rgb, vec3(1.0 / 2.2)), v_color.a);
 
     // v_color = vec4(vec3(sunlight_color.rgb) * (((color & 0xF0000U) >> 16U) / 15.0), 1.0);
 
