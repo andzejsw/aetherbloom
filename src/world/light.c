@@ -190,8 +190,10 @@ void light_apply(struct Chunk *chunk) {
                 
                 // Reduce light level by the opacity of the current block
                 sunlight -= BLOCKS[chunk_get_block(chunk, pos_c)].opacity;
+
                 if (sunlight <= 0) {
-                    break; // No more light to propagate downwards in this column
+                    chunk_set_sunlight(chunk, pos_c, 0);
+                    break;
                 }
 
                 chunk_set_sunlight(chunk, pos_c, sunlight);
