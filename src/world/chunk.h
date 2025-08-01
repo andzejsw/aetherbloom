@@ -5,6 +5,7 @@
 #include "../util/util.h"
 #include "chunkmesh.h"
 #include "light.h"
+#include "../entity/c_light.h"
 
 // forward declarations
 struct World;
@@ -98,14 +99,7 @@ void chunk_on_modify(
 #define BLOCK_MASK 0x000000000000FFFF
 #define BLOCK_OFFSET 0
 
-#define BLOCKLIGHT_MASK 0x000000000FFFF0000
-#define BLOCKLIGHT_OFFSET 16
 
-#define SUNLIGHT_MASK 0x0000000F00000000
-#define SUNLIGHT_OFFSET 32
-
-#define LIGHT_MASK 0x0000000FFFFF0000
-#define LIGHT_OFFSET 16
 
 #define METADATA_MASK 0xFFFFFF7000000000
 #define METADATA_OFFSET 36

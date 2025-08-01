@@ -30,7 +30,7 @@ typedef u32 Light;
     (((Blocklight) (b)) <<  4) |\
     (((Blocklight) (i)) <<  0))
 
-#define LIGHT_OF(_sun, _torch) ((((u32) (_sun)) << 16) | ((u32) (_torch)))
+#define LIGHT_OF(_sun, _torch) ((((u32) (_sun)) << SUNLIGHT_OFFSET) | ((u32) (_torch)))
 
 void blocklight_add(struct World *world, ivec3s pos, Blocklight light);
 void blocklight_remove(struct World *world, ivec3s pos);

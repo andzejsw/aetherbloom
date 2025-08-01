@@ -203,7 +203,7 @@ void light_apply(struct Chunk *chunk) {
     }
 
     // Now, propagate sunlight horizontally from the initial vertical sources
-    add_propagate(chunk->world, sunlight_queue, 0xF0000, 16, SUNLIGHT);
+    add_propagate(chunk->world, sunlight_queue, SUNLIGHT_MASK, SUNLIGHT_OFFSET, SUNLIGHT);
 
     // Next, gather all block light sources
     for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
