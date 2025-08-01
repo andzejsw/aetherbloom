@@ -35,10 +35,7 @@ static void add_propagate(
         u32 light = world_get_light(world, node.pos);
         u32 val = (light & mask) >> offset;
 
-        // Don't propagate from non-transparent blocks
-        if (!BLOCKS[world_get_block(world, node.pos)].transparent) {
-            continue;
-        }
+
 
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s n_pos = glms_ivec3_add(node.pos, DIR2IVEC3S(d));
@@ -76,11 +73,6 @@ static void remove_propagate(
     while (queue->size != 0) {
         struct LightNode node = DEQUEUE(queue);
         u32 value = node.value;
-
-        // Don't propagate from non-transparent blocks
-        if (!BLOCKS[world_get_block(world, node.pos)].transparent) {
-            continue;
-        }
 
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s n_pos = glms_ivec3_add(node.pos, DIR2IVEC3S(d));
