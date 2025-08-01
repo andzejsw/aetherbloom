@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "../world/chunk.h"
 #include "../state.h"
 #include "../entity/ecs.h"
 #include "../entity/ecscomponents.h"
@@ -6,6 +7,18 @@
 #include "block_names.h"
 #include <stdio.h>
 #include <math.h>
+
+static inline s32 floor_div(s32 a, s32 b) {
+    s32 res = a / b;
+    if ((a % b != 0) && ((a < 0) != (b < 0))) {
+        res--;
+    }
+    return res;
+}
+
+static inline s32 pos_mod(s32 i, s32 n) {
+    return (i % n + n) % n;
+}
 
 extern struct Window window; // Declare global window struct
 
@@ -60,6 +73,26 @@ void ui_render(struct UI *self) {
             font_render_text(
                 &state.renderer.font, light_str,
                 (vec2s){{10.0f, state.window->size.y - 102.0f}}, GLMS_VEC4_ONE, 1.0f);
+
+            char chunk_coords_str[64];
+            ivec3s world_pos = c_position->block;
+            ivec3s chunk_pos = {{
+                floor_div(world_pos.x, CHUNK_SIZE_X),
+                floor_div(world_pos.y, CHUNK_SIZE_Y),
+                floor_div(world_pos.z, CHUNK_SIZE_Z)
+            }};
+            ivec3s inner_pos = {{
+                pos_mod(world_pos.x, CHUNK_SIZE_X),
+                pos_mod(world_pos.y, CHUNK_SIZE_Y),
+                pos_mod(world_pos.z, CHUNK_SIZE_Z)
+            }};
+            snprintf(chunk_coords_str, sizeof(chunk_coords_str), "Chunk: %d %d %d / %d %d %d",
+                     chunk_pos.x, chunk_pos.y, chunk_pos.z,
+                     inner_pos.x, inner_pos.y, inner_pos.z);
+
+            font_render_text(
+                &state.renderer.font, chunk_coords_str,
+                (vec2s){{10.0f, state.window->size.y - 136.0f}}, GLMS_VEC4_ONE, 1.0f);
         }
 
         struct BlockLookComponent *c_blocklook = ecs_get(state.world.entity_load, C_BLOCKLOOK);
