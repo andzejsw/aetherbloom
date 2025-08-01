@@ -25,7 +25,6 @@ enum PropagationType {
     DEFAULT_LIGHT, SUNLIGHT
 };
 
-// This is the core lighting propagation function. It is now correct.
 static void add_propagate(
     struct World *world, struct LightQueue *queue,
     u32 mask, u32 offset, enum PropagationType type) {
@@ -131,7 +130,6 @@ void blocklight_remove(struct World *world, ivec3s pos) {
     }
 }
 
-// This function is now correct. It no longer uses the flawed heightmap.
 void light_update(struct World *world, ivec3s pos, Frustum *frustum) {
     AABB block_aabb = {glms_vec3_add(IVEC3S2V(pos), (vec3s){{-0.5f, -0.5f, -0.5f}}), glms_vec3_add(IVEC3S2V(pos), (vec3s){{0.5f, 0.5f, 0.5f}})};
     if (!frustum_intersect(frustum, block_aabb)) {
@@ -145,7 +143,6 @@ void light_update(struct World *world, ivec3s pos, Frustum *frustum) {
         bool sunlight = i == 4;
         queue->size = 0;
 
-        // Enqueue the changed block itself and all its neighbors to force a recalculation.
         ENQUEUE(queue, ((struct LightNode) { .pos = pos }));
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s pos_n = glms_ivec3_add(pos, DIR2IVEC3S(d));
@@ -171,14 +168,12 @@ void light_apply(struct Chunk *chunk) {
     struct LightQueue *sunlight_queue = calloc(1, sizeof(struct LightQueue));
     struct LightQueue *blocklight_queue = calloc(1, sizeof(struct LightQueue));
 
-    // First, do a quick vertical pass to set all skylight based on opacity
     for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
         for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
             s32 sunlight = LIGHT_MAX;
             for (s64 y = CHUNK_SIZE_Y - 1; y >= 0; y--) {
                 ivec3s pos_c = {{x, y, z}};
                 
-                // Reduce light level by the opacity of the current block
                 sunlight -= BLOCKS[chunk_get_block(chunk, pos_c)].opacity;
 
                 if (sunlight <= 0) {
@@ -192,10 +187,8 @@ void light_apply(struct Chunk *chunk) {
         }
     }
 
-    // Now, propagate sunlight horizontally from the initial vertical sources
     add_propagate(chunk->world, sunlight_queue, SUNLIGHT_MASK, SUNLIGHT_OFFSET, SUNLIGHT);
 
-    // Next, gather all block light sources
     for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
         for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
             for (s64 y = 0; y < CHUNK_SIZE_Y; y++) {
@@ -211,7 +204,6 @@ void light_apply(struct Chunk *chunk) {
         }
     }
     
-    // Propagate blocklight
     struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
     for (size_t i = 0; i < 4; i++) {
         u32 mask = 0xF << (i * 4), offset = i * 4;
