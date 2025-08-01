@@ -35,8 +35,6 @@ static void add_propagate(
         u32 light = world_get_light(world, node.pos);
         u32 val = (light & mask) >> offset;
 
-
-
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s n_pos = glms_ivec3_add(node.pos, DIR2IVEC3S(d));
             u64 n_data = world_get_data(world, n_pos);
