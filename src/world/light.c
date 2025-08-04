@@ -49,9 +49,15 @@ static void add_propagate(
         for (enum Direction d = 0; d < 6; d++) {
             ivec3s n_pos = glms_ivec3_add(node.pos, DIR2IVEC3S(d));
             u64 n_data = world_get_data(world, n_pos);
+            struct Block n_block = BLOCKS[chunk_data_to_block(n_data)];
+
+            // Light does not propagate into solid blocks
+            if (!n_block.transparent) {
+                continue;
+            }
+
             u32 n_light = chunk_data_to_light(n_data);
             u32 n_val = (n_light & mask) >> offset;
-            struct Block n_block = BLOCKS[chunk_data_to_block(n_data)];
 
             // Rule B: All light loses 1 level per block traveled, plus the opacity of the block it enters.
             u32 reduction = 1 + n_block.opacity;
