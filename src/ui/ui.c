@@ -93,6 +93,12 @@ void ui_render(struct UI *self) {
             font_render_text(
                 &state.renderer.font, chunk_coords_str,
                 (vec2s){{10.0f, state.window->size.y - 136.0f}}, GLMS_VEC4_ONE, 1.0f);
+
+            char seed_str[64];
+            snprintf(seed_str, sizeof(seed_str), "Seed: %llu", state.world.seed);
+            font_render_text(
+                &state.renderer.font, seed_str,
+                (vec2s){{10.0f, state.window->size.y - 170.0f}}, GLMS_VEC4_ONE, 1.0f);
         }
 
         struct BlockLookComponent *c_blocklook = ecs_get(state.world.entity_load, C_BLOCKLOOK);
