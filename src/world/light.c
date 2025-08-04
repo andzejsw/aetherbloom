@@ -11,20 +11,32 @@
 
 #define DEQUEUE(q) ((q)->elements[--(q)->size])
 
+// Represents a node in the light propagation queue.
 struct LightNode {
     ivec3s pos;
     u32 value;
 };
 
+// A queue for light propagation.
 struct LightQueue {
     struct LightNode elements[QUEUE_SIZE];
     size_t size;
 };
 
+// The type of light being propagated.
 enum PropagationType {
     DEFAULT_LIGHT, SUNLIGHT
 };
 
+/**
+ * Propagates light from the sources in the queue.
+ *
+ * @param world The world.
+ * @param queue The queue of light sources to propagate.
+ * @param mask The bitmask for the light channel being propagated.
+ * @param offset The bit offset for the light channel being propagated.
+ * @param type The type of light being propagated.
+ */
 static void add_propagate(
     struct World *world, struct LightQueue *queue,
     u32 mask, u32 offset, enum PropagationType type) {
@@ -64,6 +76,16 @@ static void add_propagate(
     }
 }
 
+/**
+ * Propagates the removal of light from the sources in the queue.
+ *
+ * @param world The world.
+ * @param queue The queue of light sources to remove.
+ * @param prop_queue A queue to be filled with light sources that need to be re-propagated.
+ * @param mask The bitmask for the light channel being removed.
+ * @param offset The bit offset for the light channel being removed.
+ * @param type The type of light being removed.
+ */
 static void remove_propagate(
     struct World *world, struct LightQueue *queue, struct LightQueue *prop_queue,
     u32 mask, u32 offset, enum PropagationType type) {
@@ -86,6 +108,9 @@ static void remove_propagate(
     }
 }
 
+/**
+ * Adds a light source to a single channel.
+ */
 static void add_channel(
     struct World *world, ivec3s pos,
     u8 value, u32 mask, u32 offset, enum PropagationType type) {
@@ -96,6 +121,9 @@ static void add_channel(
     free(queue);
 }
 
+/**
+ * Removes a light source from a single channel.
+ */
 static void remove_channel(
     struct World *world, ivec3s pos,
     u32 mask, u32 offset, enum PropagationType type) {
@@ -168,6 +196,7 @@ void light_apply(struct Chunk *chunk) {
     struct LightQueue *sunlight_queue = calloc(1, sizeof(struct LightQueue));
     struct LightQueue *blocklight_queue = calloc(1, sizeof(struct LightQueue));
 
+    // First, calculate vertical sunlight propagation.
     for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
         for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
             s32 sunlight = LIGHT_MAX;
@@ -187,8 +216,10 @@ void light_apply(struct Chunk *chunk) {
         }
     }
 
+    // Propagate sunlight horizontally.
     add_propagate(chunk->world, sunlight_queue, SUNLIGHT_MASK, SUNLIGHT_OFFSET, SUNLIGHT);
 
+    // Next, find all block light sources in the chunk.
     for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
         for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
             for (s64 y = 0; y < CHUNK_SIZE_Y; y++) {
@@ -204,6 +235,7 @@ void light_apply(struct Chunk *chunk) {
         }
     }
     
+    // Propagate block light.
     struct LightQueue *queue = calloc(1, sizeof(struct LightQueue));
     for (size_t i = 0; i < 4; i++) {
         u32 mask = 0xF << (i * 4), offset = i * 4;

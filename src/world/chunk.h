@@ -96,14 +96,15 @@ void chunk_on_modify(
     struct Chunk *self, ivec3s pos,
     u64 prev, u64 data);
 
+// Block ID: 16 bits
 #define BLOCK_MASK 0x000000000000FFFF
 #define BLOCK_OFFSET 0
 
-
-
+// Metadata: 28 bits
 #define METADATA_MASK 0xFFFFFF7000000000
 #define METADATA_OFFSET 36
 
+// Data: 64 bits (entire value)
 #define DATA_MASK 0xFFFFFFFFFFFFFFFF
 #define DATA_OFFSET 0
 
