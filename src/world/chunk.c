@@ -82,7 +82,7 @@ void chunk_on_modify(
         }
 
         if (block.can_emit_light) {
-            blocklight_add(self->world, pos_w, block.get_blocklight(self->world, pos_w));
+            light_add(self->world, pos_w, block.get_blocklight(self->world, pos_w));
         }
 
         if (!self->generating) {
@@ -90,7 +90,7 @@ void chunk_on_modify(
                 world_heightmap_recalculate(self->world, (ivec2s) {{ pos_w.x, pos_w.z }});
                 
                 // propagate lighting through this block
-                light_update(self->world, pos_w, &self->world->frustum);
+                light_update(self->world, pos_w);
             } else {
                 world_heightmap_update(self->world, pos_w);
                 

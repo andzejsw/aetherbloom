@@ -43,13 +43,10 @@ typedef u32 Light;
 // Combines sunlight and blocklight into a single Light value.
 #define LIGHT_OF(_sun, _torch) ((((u32) (_sun)) << SUNLIGHT_OFFSET) | ((u32) (_torch)))
 
-// Adds a blocklight source at the given position and propagates its light.
-void blocklight_add(struct World *world, ivec3s pos, Blocklight light);
+// Adds a light source at the given position and propagates its light.
+void light_add(struct World *world, ivec3s pos, Light light);
 
-// Removes a blocklight source at the given position and updates the surrounding light.
-void blocklight_remove(struct World *world, ivec3s pos);
-
-// Removes all light (block and sky) from a given position.
+// Removes a light source at the given position and updates the surrounding light.
 void light_remove(struct World *world, ivec3s pos);
 
 // Applies initial lighting to a chunk. This includes calculating vertical sunlight
@@ -58,6 +55,6 @@ void light_apply(struct Chunk *chunk);
 
 // Updates the light around a specific position. This is typically called
 // when a block is placed or removed.
-void light_update(struct World *world, ivec3s pos, Frustum *frustum);
+void light_update(struct World *world, ivec3s pos);
 
 #endif

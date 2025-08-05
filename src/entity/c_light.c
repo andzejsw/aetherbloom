@@ -10,12 +10,12 @@ static void tick(struct LightComponent *c_light, struct Entity entity) {
         c_light->flags.enabled != c_light->last.enabled;
 
     if (changed) {
-        blocklight_remove(entity.ecs->world, c_light->last.pos);
+        light_remove(entity.ecs->world, c_light->last.pos);
 
         // reset block light if it was removed
         struct Block block = BLOCKS[world_get_block(entity.ecs->world, c_light->last.pos)];
         if (block.can_emit_light) {
-            blocklight_add(
+            light_add(
                 entity.ecs->world,
                 c_light->last.pos,
                 block.get_blocklight(entity.ecs->world, c_light->last.pos));
@@ -23,7 +23,7 @@ static void tick(struct LightComponent *c_light, struct Entity entity) {
     }
 
     if (c_light->flags.enabled && changed) {
-        blocklight_add(entity.ecs->world, c_position->block, c_light->light);
+        light_add(entity.ecs->world, c_position->block, c_light->light);
 
         c_light->last.pos = c_position->block;
         c_light->last.light = c_light->light;

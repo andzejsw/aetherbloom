@@ -187,31 +187,145 @@ static inline bool world_contains(struct World *self, ivec3s pos) {
     return world_contains_chunk(self, world_pos_to_offset(pos));
 }
 
-#define WORLD_DECL_DATA(T, _name)                                                   \
-    static inline T world_get_##_name(struct World *self, ivec3s pos) {             \
-        ivec3s offset = world_pos_to_offset(pos);                                   \
-        if (world_contains_chunk(self, offset)) {                                   \
-            return chunk_get_##_name(                                               \
-                world_get_chunk(self, offset),                                      \
-                world_pos_to_chunk_pos(pos));                                       \
-        }                                                                           \
-        return (T)0;                                                                \
-    }                                                                               \
-    static inline void world_set_##_name(struct World *self, ivec3s pos, T value) { \
-        ivec3s offset = world_pos_to_offset(pos);                                   \
-        if (world_contains_chunk(self, offset)) {                                   \
-            chunk_set_##_name(                                                      \
-                world_get_chunk(self, offset),                                      \
-                world_pos_to_chunk_pos(pos),                                        \
-                value);                                                             \
-        }                                                                           \
+static inline BlockId world_get_block(struct World *self, ivec3s pos) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        return chunk_get_block(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos));
     }
+    return AIR;
+}
 
-WORLD_DECL_DATA(enum BlockId, block)
-WORLD_DECL_DATA(Blocklight, blocklight)
-WORLD_DECL_DATA(Sunlight, sunlight)
-WORLD_DECL_DATA(Light, light)
-WORLD_DECL_DATA(u32, metadata)
-WORLD_DECL_DATA(u64, data)
+static inline void world_set_block(struct World *self, ivec3s pos, BlockId value) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        BlockId old_block = world_get_block(self, pos);
+        chunk_set_block(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos),
+            value);
+        BlockId new_block = world_get_block(self, pos);
+        if (old_block != new_block) {
+            struct Block old_block_data = BLOCKS[old_block];
+            struct Block new_block_data = BLOCKS[new_block];
+            if (old_block_data.can_emit_light) {
+                light_remove(self, pos);
+            }
+            if (new_block_data.can_emit_light) {
+                light_add(self, pos, new_block_data.get_blocklight(self, pos));
+            }
+            if (old_block_data.transparent != new_block_data.transparent) {
+                world_heightmap_recalculate(self, (ivec2s){{pos.x, pos.z}});
+            }
+            light_update(self, pos);
+        }
+    } else {
+        world_append_unloaded_block(self, pos, value);
+    }
+}
+
+static inline Blocklight world_get_blocklight(struct World *self, ivec3s pos) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        return chunk_get_blocklight(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos));
+    }
+    return 0;
+}
+
+static inline void world_set_blocklight(struct World *self, ivec3s pos, Blocklight value) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        chunk_set_blocklight(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos),
+            value);
+    }
+}
+
+static inline Sunlight world_get_sunlight(struct World *self, ivec3s pos) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        return chunk_get_sunlight(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos));
+    }
+    return 0;
+}
+
+static inline void world_set_sunlight(struct World *self, ivec3s pos, Sunlight value) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        chunk_set_sunlight(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos),
+            value);
+    }
+}
+
+static inline Light world_get_light(struct World *self, ivec3s pos) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        return chunk_get_light(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos));
+    }
+    return 0;
+}
+
+static inline void world_set_light(struct World *self, ivec3s pos, Light value) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        chunk_set_light(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos),
+            value);
+    }
+}
+
+static inline u32 world_get_metadata(struct World *self, ivec3s pos) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        return chunk_get_metadata(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos));
+    }
+    return 0;
+}
+
+static inline void world_set_metadata(struct World *self, ivec3s pos, u32 value) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        chunk_set_metadata(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos),
+            value);
+    }
+}
+
+static inline u64 world_get_data(struct World *self, ivec3s pos) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        return chunk_get_data(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos));
+    }
+    return 0;
+}
+
+static inline void world_set_data(struct World *self, ivec3s pos, u64 value) {
+    ivec3s offset = world_pos_to_offset(pos);
+    if (world_contains_chunk(self, offset)) {
+        chunk_set_data(
+            world_get_chunk(self, offset),
+            world_pos_to_chunk_pos(pos),
+            value);
+    }
+}
+
+
+
 
 #endif

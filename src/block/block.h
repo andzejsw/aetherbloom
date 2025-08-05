@@ -38,6 +38,8 @@ enum BlockId {
     PINE_LEAVES = 24
 };
 
+typedef enum BlockId BlockId;
+
 struct Block {
     enum BlockId id;
 
