@@ -4,6 +4,31 @@
 #include "../util/util.h"
 #include "../gfx/frustum.h"
 
+#define QUEUE_SIZE 65536
+
+#define ENQUEUE(q, e) \
+    assert(((q)->size + 1) < QUEUE_SIZE); \
+    ((q)->elements[(q)->size++] = (e));
+
+#define DEQUEUE(q) ((q)->elements[--(q)->size])
+
+// Represents a node in the light propagation queue.
+struct LightNode {
+    ivec3s pos;
+    u32 value;
+};
+
+// A queue for light propagation.
+struct LightQueue {
+    struct LightNode elements[QUEUE_SIZE];
+    size_t size;
+};
+
+// The type of light being propagated.
+enum PropagationType {
+    DEFAULT_LIGHT, SUNLIGHT
+};
+
 // forward declarations
 struct Chunk;
 struct World;
