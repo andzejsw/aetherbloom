@@ -17,6 +17,7 @@ void init() {
     world_init(&state.world);
     ui_init(&state.ui);
     mouse_set_grabbed(true);
+    state.player_spawned = false;
 
     struct Entity player = ecs_new(&state.world.ecs);
     ecs_add(player, C_POSITION);
@@ -49,11 +50,29 @@ void init() {
     struct ControlComponent *c_control = ecs_get(player, C_CONTROL);
     c_control->mouse_sensitivity = 3.0f;
 
-    struct PositionComponent *c_position = ecs_get(player, C_POSITION);
-    c_position->position = (vec3s) {{ 0.5f, world_heightmap_get(&state.world, (ivec2s){{0, 0}}) + 2.0f, 0.5f }};
-
     state.world.entity_load = player;
     state.world.entity_view = player;
+}
+
+void spawn_player_if_ready() {
+    if (state.player_spawned) {
+        return;
+    }
+
+    // Check if the chunk at (0,0) is loaded
+    if (!world_contains_chunk(&state.world, (ivec3s){{0, 0, 0}})) {
+        return;
+    }
+
+    s64 spawn_y = world_heightmap_get(&state.world, (ivec2s){{0, 0}});
+    if (spawn_y == HEIGHTMAP_UNKNOWN) {
+        return;
+    }
+
+    struct PositionComponent *c_position = ecs_get(state.world.entity_view, C_POSITION);
+    c_position->position = (vec3s) {{ 0.5f, spawn_y + 2.0f, 0.5f }};
+
+    state.player_spawned = true;
 }
 
 void destroy() {
@@ -81,6 +100,8 @@ void update() {
     renderer_update(&state.renderer);
     world_update(&state.world);
     ui_update(&state.ui);
+
+    spawn_player_if_ready();
 
     // wireframe toggle (T)
     if (state.window->keyboard.keys[GLFW_KEY_T].pressed) {

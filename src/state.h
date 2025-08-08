@@ -16,6 +16,7 @@ struct State {
     struct UI ui;
     size_t ticks;
     bool show_overlay;
+    bool player_spawned;
 };
 
 // global state

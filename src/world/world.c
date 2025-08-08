@@ -83,6 +83,12 @@ static int _ftb_cmp(const ivec3s *a, const ivec3s *b, ivec3s *center) {
 #define world_foreach_offset_ftb(_w, _iname, _oname)\
     _world_foreach_offset_cmp_impl(_w, _iname, _oname, _ftb_cmp, CONCAT(v, __COUNTER__), CONCAT(v, __COUNTER__), CONCAT(v, __COUNTER__))
 
+// Custom struct to hold chunk column + distance
+typedef struct {
+    ivec2s column;   // x,z offsets of the column
+    float dist;      // distance from player horizontally (xz)
+} ChunkColumn;
+
 // world block position -> heightmap internal position
 static inline ivec2s world_pos_to_heightmap_pos(ivec2s pos) {
     return glms_ivec2_mod(glms_ivec2_add(glms_ivec2_mod(pos, CHUNK_SIZE_XZ), CHUNK_SIZE_XZ), CHUNK_SIZE_XZ);
@@ -302,15 +308,58 @@ void world_remove_unloaded_block(struct World *self, size_t i) {
     }
 }
 
+static int cmp_chunk_column(const void *a, const void *b) {
+    const ChunkColumn *ca = (const ChunkColumn *)a;
+    const ChunkColumn *cb = (const ChunkColumn *)b;
+    return (ca->dist > cb->dist) - (ca->dist < cb->dist);
+}
+
 // Attempt to load any NULL chunks
 static void load_empty_chunks(struct World *self) {
-    world_foreach_offset_ftb(self, i, offset) {
-        if (self->chunks[i] == NULL &&
-            self->throttles.load.count < self->throttles.load.max) {
-            world_load_chunk(self, world_chunk_offset(self, i));
-            self->throttles.load.count++;
+    size_t num_columns = self->chunks_size * self->chunks_size;
+    ChunkColumn *columns = malloc(num_columns * sizeof(ChunkColumn));
+    ivec2s center_xz = {self->center_offset.x, self->center_offset.z};
+
+    // Collect columns with distance
+    size_t idx = 0;
+    for (int x = 0; x < (int)self->chunks_size; x++) {
+        for (int z = 0; z < (int)self->chunks_size; z++) {
+            ivec2s col = {
+                self->chunks_origin.x + x,
+                self->chunks_origin.z + z
+            };
+            float dx = (float)(col.x - center_xz.x);
+            float dz = (float)(col.y - center_xz.y);
+            columns[idx].column = col;
+            columns[idx].dist = sqrtf(dx * dx + dz * dz);
+            idx++;
         }
     }
+
+    // Sort columns by horizontal distance to player
+    qsort(columns, num_columns, sizeof(ChunkColumn), cmp_chunk_column);
+
+    // For each column, load chunks top-to-bottom
+    for (size_t c = 0; c < num_columns && self->throttles.load.count < self->throttles.load.max; c++) {
+        ivec2s col = columns[c].column;
+
+        // Iterate y from top to bottom
+        for (int y = (int)(self->chunks_origin.y + self->chunks_size - 1); y >= (int)self->chunks_origin.y; y--) {
+            ivec3s chunk_off = {col.x, y, col.y};
+            size_t chunk_index = world_chunk_index(self, chunk_off);
+
+            if (chunk_index == (size_t)-1) continue;
+            if (self->chunks[chunk_index] == NULL) {
+                world_load_chunk(self, chunk_off);
+                self->throttles.load.count++;
+
+                if (self->throttles.load.count >= self->throttles.load.max)
+                    break;
+            }
+        }
+    }
+
+    free(columns);
 }
 
 // Centers the world's loaded chunks around the specified block position
