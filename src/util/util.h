@@ -2,6 +2,7 @@
 #define UTIL_H
 
 #define TICKRATE 60
+#define MAX_WORLD_HEIGHT 256
 
 #define PACKED __attribute__((__packed__))
 

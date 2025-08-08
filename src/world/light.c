@@ -227,7 +227,18 @@ void light_apply(struct Chunk *chunk) {
     // First, calculate vertical sunlight propagation.
     for (s64 x = 0; x < CHUNK_SIZE_X; x++) {
         for (s64 z = 0; z < CHUNK_SIZE_Z; z++) {
-            s32 sunlight = LIGHT_MAX;
+            s32 sunlight;
+
+            // Check for chunk above
+            ivec3s above_pos = glms_ivec3_add(chunk->position, (ivec3s){{x, CHUNK_SIZE_Y, z}});
+            struct Chunk *above_chunk = world_get_chunk(chunk->world, world_pos_to_offset(above_pos));
+
+            if (above_chunk != NULL) {
+                sunlight = chunk_get_sunlight(above_chunk, (ivec3s){{x, 0, z}});
+            } else {
+                sunlight = LIGHT_MAX;
+            }
+
             for (s64 y = CHUNK_SIZE_Y - 1; y >= 0; y--) {
                 ivec3s pos_c = {{x, y, z}};
                 
