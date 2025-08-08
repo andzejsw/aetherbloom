@@ -52,9 +52,6 @@ struct Block {
     // if true, this block is treated as a light source
     bool can_emit_light;
 
-    // how much light this block absorbs
-    u8 opacity;
-
     // if true, this block's textures are determined with get_animation_frames
     bool animated;
 

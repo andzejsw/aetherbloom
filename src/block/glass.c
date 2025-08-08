@@ -8,7 +8,6 @@ void glass_init() {
     struct Block glass = BLOCK_DEFAULT;
     glass.id = GLASS;
     glass.transparent = true;
-    glass.opacity = 0;
     glass.get_texture_location = get_texture_location;
     BLOCKS[GLASS] = glass;
 }

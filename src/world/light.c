@@ -28,12 +28,7 @@ static void propagate_sunlight(struct World *world, struct LightQueue *queue) {
 
             u32 neighbor_light_level = chunk_data_to_sunlight(neighbor_data);
             
-            u32 reduction;
-            if (d == DOWN) {
-                reduction = neighbor_block.opacity;
-            } else {
-                reduction = 1 + neighbor_block.opacity;
-            }
+            u32 reduction = 1;
 
             if (light_level > reduction) {
                 u32 new_light_level = light_level - reduction;
@@ -69,7 +64,7 @@ static void propagate_blocklight(struct World *world, struct LightQueue *queue) 
                 u8 current_channel = (light_level & mask) >> (i * 4);
                 u8 neighbor_channel = (neighbor_light_level & mask) >> (i * 4);
 
-                u8 reduction = 1 + neighbor_block.opacity;
+                u8 reduction = 1;
                 if (current_channel > reduction) {
                     u8 new_val = current_channel - reduction;
                     if (new_val > neighbor_channel) {
@@ -236,9 +231,18 @@ void light_apply(struct Chunk *chunk) {
             for (s64 y = CHUNK_SIZE_Y - 1; y >= 0; y--) {
                 ivec3s pos_c = {{x, y, z}};
                 
-                sunlight -= BLOCKS[chunk_get_block(chunk, pos_c)].opacity;
-                sunlight = max(0, sunlight);
+                BlockId block_id = chunk_get_block(chunk, pos_c);
+                struct Block block = BLOCKS[block_id];
 
+                if (block_id != AIR) {
+                    if (!block.transparent) {
+                        sunlight = 0;
+                    } else {
+                        sunlight--;
+                    }
+                }
+
+                sunlight = max(0, sunlight);
                 chunk_set_sunlight(chunk, pos_c, sunlight);
             }
         }

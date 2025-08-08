@@ -9,7 +9,6 @@ void rose_init() {
     rose.id = ROSE;
     rose.transparent = true;
     rose.solid = false;
-    rose.opacity = 0;
     rose.mesh_type = BLOCKMESH_SPRITE;
     rose.get_texture_location = get_texture_location;
     BLOCKS[ROSE] = rose;

@@ -8,7 +8,6 @@ void leaves_init() {
     struct Block leaves = BLOCK_DEFAULT;
     leaves.id = LEAVES;
     leaves.transparent = true;
-    leaves.opacity = 1;
     leaves.get_texture_location = get_texture_location;
     BLOCKS[LEAVES] = leaves;
 }
