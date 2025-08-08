@@ -8,3 +8,4 @@
 ### Standarts
 
 - Organize files and code in them according to C language standarts
+- Solutions must be simple, but same time with best performance possible
